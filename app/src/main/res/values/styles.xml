@@ -32,5 +32,10 @@
   <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
     <!-- All customizations that are NOT specific to a particular API-level can go here. -->
   </style>
+  <style name="mButtonToolbarStyle" parent="@style/Widget.AppCompat.Button">
+    <item name="android:background">?selectableItemBackground</item>
+    <item name="android:textColor">@color/colorAccent</item>
+    <item name="android:fontFamily">sans-serif</item>
+  </style>
 
 </resources>

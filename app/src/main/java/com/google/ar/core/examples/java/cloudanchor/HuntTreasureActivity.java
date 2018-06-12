@@ -16,26 +16,35 @@
 
 package com.google.ar.core.examples.java.cloudanchor;
 
+import android.app.Dialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.GuardedBy;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -84,8 +93,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -99,9 +110,10 @@ import javax.microedition.khronos.opengles.GL10;
  * API calls. This app only has at most one anchor at a time, to focus more on the cloud aspect of
  * anchors.
  */
-public class HuntTreasureActivity extends AppCompatActivity implements GLSurfaceView.Renderer {
+public class HuntTreasureActivity extends AppCompatActivity implements GLSurfaceView.Renderer, TreasureRecycler.OnTreasureRecyclerRequest{
 
     private static final String TAG = HuntTreasureActivity.class.getSimpleName();
+    private Logger mLogger;
 
     private enum HostResolveMode {
         NONE,
@@ -135,6 +147,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     private Button hostButton;
     private Button resolveButton;
     private TextView roomCodeText;
+    private ImageView mapView;
 
     @GuardedBy("singleTapLock")
     private MotionEvent queuedSingleTap;
@@ -157,9 +170,18 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_hunt_treasure);
+        mLogger = new Logger("HuntTreasureActivity");
         // Initialize the surface
         surfaceView = findViewById(R.id.surfaceview);
         displayRotationHelper = new DisplayRotationHelper(this);
+
+        mapView = findViewById(R.id.mapView);
+        mapView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startMapDialog();
+            }
+        });
 
         // Info from the push notification read here
         onNewIntent(getIntent());
@@ -212,6 +234,25 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         initializeFirebaseMessagingOnCreate();
     }
 
+    public void startMapDialog() {
+        final Dialog dialog = new Dialog(HuntTreasureActivity.this);
+        dialog.setContentView(R.layout.map_dialog);
+        TextView mapInfoTextview = dialog.findViewById(R.id.mapInfoTextview);
+        RecyclerView recyclerView = dialog.findViewById(R.id.treasureRecycler);
+        //todo fetch Treasures and sort them by distance
+        List<Treasure> mTreasures = new ArrayList<>();
+        mTreasures.add(new Treasure("Expires in: 3 mins", "Look behind the fence", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, 0, 0, true));
+        mTreasures.add(new Treasure("Expires in: 3 hours", "Look under the fence", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
+        mTreasures.add(new Treasure("Expires in: 2 hours", "Behind you Satish!", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
+        mTreasures.add(new Treasure("Expires in: 1h45m", "Ask your mom", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, 0, 0, false));
+        TreasureRecycler treasureAdapter = new TreasureRecycler(this, mTreasures);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        recyclerView.setAdapter(treasureAdapter);
+
+
+        dialog.show();
+    }
     @Override
     public void onNewIntent(Intent intent){
         Bundle extras = intent.getExtras();
@@ -643,6 +684,29 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         });
   }
 
+    @Override
+    public void onMapsClicked(int treasureIndex) {
+        mLogger.logInfo("OnMapsCLicked at treasure:"+ Integer.toString(treasureIndex));
+    }
+
+    @Override
+    public void onHintClicked(int treasureIndex) {
+        mLogger.logInfo("OnHintClicked at treasure:"+ Integer.toString(treasureIndex));
+
+    }
+
+    @Override
+    public void onPictureHintClicked(int treasureIndex) {
+        mLogger.logInfo("OnPictureHintClicked at treasure:"+ Integer.toString(treasureIndex));
+
+    }
+
+    @Override
+    public void onTreasureClicked(int treasureIndex) {
+        mLogger.logInfo("OnTreasureClicked at treasure:"+ Integer.toString(treasureIndex));
+
+    }
+
   /**
    * Listens for both a new room code and an anchor ID, and shares the anchor ID in Firebase with
    * the room code when both are available.
@@ -717,4 +781,6 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
               HuntTreasureActivity.this, "From Cloud: "+notification);
     }
   }
+
+
 }

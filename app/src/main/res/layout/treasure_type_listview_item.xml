@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    android:id="@+id/mainLayout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp"
+
+    android:background="@drawable/map_dialog_shape"
+
+    android:gravity="center"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:id="@+id/topLinearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="8dp"
+        android:layout_alignParentTop="true">
+        <ImageView
+            android:id="@+id/treasure_icon"
+            android:src="@drawable/treasure_map"
+            android:scaleType="fitXY"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp" />
+
+
+        <TextView
+            android:id="@+id/distanceTextview"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+
+            android:layout_alignParentStart="true"
+            android:text="5km away" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:textColor="@color/black"
+            android:layout_marginStart="4dp"
+            android:layout_gravity="center"
+            android:layout_marginEnd="4dp"
+            android:text="|" />
+
+        <TextView
+            android:textColor="@color/black"
+            android:layout_gravity="center"
+            android:id="@+id/expireTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Expires in: 3 hours" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_below="@id/topLinearLayout"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/mapsButton"
+            android:text="MAPS"
+            android:layout_width="85dp"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/hintButton"
+            android:text="HINT"
+            android:layout_width="85dp"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/pictureHintButton"
+            android:text="PICTURE"
+            android:layout_width="85dp"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+
+
+
+</RelativeLayout>

@@ -26,6 +26,7 @@
       android:layout_gravity="top"/>
 
   <LinearLayout
+      android:id="@+id/buttonRow"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:orientation="horizontal">
@@ -49,29 +50,34 @@
         android:layout_gravity="center_horizontal"
         android:text="@string/log_token" />
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:paddingRight="10dp">
 
-      <TextView
-          android:id="@+id/room_code_text"
-          android:textStyle="bold"
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_alignParentEnd="true"
-          android:paddingHorizontal="15dp"
-          android:paddingVertical="5dp"
-          android:fontFamily="monospace"
-          android:text="@string/initial_room_code"
-          android:textAlignment="center"
-          android:textSize="20sp"
-          android:gravity="center_vertical"
-          android:background="#001337"/>
 
-    </RelativeLayout>
 
   </LinearLayout>
+  <TextView
+      android:id="@+id/room_code_text"
+      android:textStyle="bold"
+      android:layout_marginStart="16dp"
+      android:layout_width="wrap_content"
+      android:layout_below="@id/buttonRow"
+      android:layout_height="wrap_content"
+
+      android:fontFamily="monospace"
+      android:text="@string/initial_room_code"
+      android:textAlignment="center"
+      android:textSize="20sp"
+      android:gravity="center_vertical"
+      android:background="#001337"/>
+  <ImageView
+      android:id="@+id/mapView"
+      android:src="@drawable/treasure_map"
+      android:scaleType="fitXY"
+      android:layout_alignParentEnd="true"
+      android:layout_alignParentTop="true"
+      android:layout_marginEnd="8dp"
+      android:layout_marginTop="8dp"
+      android:padding="8dp"
+      android:layout_width="64dp"
+      android:layout_height="64dp"/>
 
 </RelativeLayout>
