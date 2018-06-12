@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:orientation="vertical">
+    <TextView
+        android:text="What type?"
+        android:layout_margin="32dp"
+
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/treasureChestButton"
+        android:text="Treasure chest"
+        android:layout_margin="6dp"
+        android:gravity="center"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content" />
+    <Button
+        android:id="@+id/letterButton"
+        android:text="Letter"
+        android:layout_margin="6dp"
+        android:gravity="center"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:id="@+id/hiddenRoomButton"
+        android:text="Hidden room"
+        android:layout_marginBottom="32dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginEnd="6dp"
+        android:layout_marginStart="6dp"
+
+        android:gravity="center"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content" />
+
+
+
+</LinearLayout>

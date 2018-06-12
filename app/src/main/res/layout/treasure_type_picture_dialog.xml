@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:orientation="vertical">
+    <TextView
+        android:text="Select a treasure"
+        android:layout_margin="32dp"
+
+        android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+    <LinearLayout
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageButton
+                android:id="@+id/treasureChestButton"
+                android:text="Treasure chest"
+                android:foreground="?android:attr/selectableItemBackground"
+
+                android:gravity="center"
+                android:layout_width="85dp"
+                android:scaleType="fitXY"
+
+                android:padding="6dp"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+
+                android:src="@drawable/treasure_chest"
+                android:layout_height="85dp" />
+            <TextView
+                android:layout_gravity="center"
+                android:padding="6dp"
+                android:text="Treasure chest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageButton
+                android:id="@+id/letterButton"
+                android:text="Letter"
+
+                android:layout_marginTop="10dp"
+                android:foreground="?android:attr/selectableItemBackground"
+                android:scaleType="fitXY"
+                android:src="@drawable/letter"
+                android:padding="6dp"
+                android:layout_marginEnd="32dp"
+
+                android:gravity="center"
+                android:layout_width="95dp"
+                android:layout_height="75dp" />
+            <TextView
+                android:layout_gravity="center"
+                android:padding="6dp"
+
+                android:layout_marginEnd="16dp"
+                android:text="Letter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>
