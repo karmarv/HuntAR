@@ -20,7 +20,7 @@
     tools:context="com.google.ar.core.examples.java.cloudanchor.HuntTreasureActivity">
 
   <android.opengl.GLSurfaceView
-      android:id="@+id/surfaceview"
+      android:id="@+id/surfaceview_hunt"
       android:layout_width="fill_parent"
       android:layout_height="fill_parent"
       android:layout_gravity="top"/>

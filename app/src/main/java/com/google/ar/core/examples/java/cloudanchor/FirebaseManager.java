@@ -19,7 +19,10 @@ package com.google.ar.core.examples.java.cloudanchor;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -28,7 +31,10 @@ import android.widget.Toast;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.ar.core.examples.java.common.messaging.AppController;
 import com.google.ar.core.examples.java.common.messaging.HuntNotification;
@@ -42,15 +48,22 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageMetadata;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 /** A helper class to manage all communications with Firebase. */
-class FirebaseManager {
+public class FirebaseManager {
   private static final String TAG =
       HuntTreasureActivity.class.getSimpleName() + "." + FirebaseManager.class.getSimpleName();
 
@@ -69,6 +82,14 @@ class FirebaseManager {
 
     /** Invoked when a new cloud anchor ID is available. */
     void onNewCloudAnchorId(String cloudAnchorId);
+  }
+
+  interface StorageListener {
+    /** Invoked when an image download is available from Firebase. */
+    void onDownloadCompleteUrl(String imageUrl);
+    void onUploadCompleteUrl(String imageUrl);
+    void onDownloadCompleteBitmap(Bitmap bitmap);
+    void onError(String error);
   }
 
   // Names of the nodes used in the Firebase Database
@@ -91,6 +112,7 @@ class FirebaseManager {
   private final DatabaseReference roomCodeRef;
   private DatabaseReference currentRoomRef = null;
   private ValueEventListener currentRoomListener = null;
+  private StorageReference storageRef = null;
 
   /**
    * Default constructor for the FirebaseManager.
@@ -100,12 +122,18 @@ class FirebaseManager {
   FirebaseManager(Context context) {
     app = FirebaseApp.initializeApp(context);
     if (app != null) {
+      // Initialize the Database reference
       DatabaseReference rootRef = FirebaseDatabase.getInstance(app).getReference();
       hotspotListRef = rootRef.child(ROOT_FIREBASE_HOTSPOTS);
       roomCodeRef = rootRef.child(ROOT_LAST_ROOM_CODE);
 
       DatabaseReference.goOnline();
       Log.d(TAG, "Successfully connected to Firebase Database!");
+
+      // Initialize the storage bucket reference
+      FirebaseStorage storage = FirebaseStorage.getInstance(app, "gs://huntar-88a42.appspot.com");
+      // Create a storage reference from our app
+      storageRef = storage.getReference();
     } else {
       Log.d(TAG, "Could not connect to Firebase Database!");
       hotspotListRef = null;
@@ -113,7 +141,89 @@ class FirebaseManager {
     }
   }
 
+  /**
+   * Upload image to firebase storage and return the file path
+   *
+   * @param filename
+   * @param bitmap
+   * @return
+   */
+  public String uploadImageToStorage(String filename, Bitmap bitmap, StorageListener listener){
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+    byte[] data = baos.toByteArray();
 
+    String pathFireImg = "images/"+filename;
+      // Create the file metadata
+      // Create file metadata including the content type
+      StorageMetadata metadata = new StorageMetadata.Builder()
+              .setContentType("image/jpg")
+              .build();
+    // Create a child reference imagesRef now points to "images"
+    StorageReference imagesRef = storageRef.child(pathFireImg); // Firebase path: images/file.jpg
+    // Upload task
+    UploadTask uploadTask = imagesRef.putBytes(data, metadata);
+    uploadTask.addOnFailureListener(new OnFailureListener() {
+      @Override
+      public void onFailure(@NonNull Exception exception) {
+       Log.e(TAG, "Error in upload: "+exception.getMessage());
+      }
+    }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+      @Override
+      public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+        double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+        Log.i(TAG,"\n\n Upload is " + progress + "% done");
+      }
+    }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+      @Override
+      public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+        // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
+        String url = taskSnapshot.getDownloadUrl().toString();
+        Log.i(TAG, "Upload success");
+        listener.onUploadCompleteUrl(url);
+      }
+    });
+    return pathFireImg;
+  }
+
+  public void downloadImageFromStorage(String pathFireImg, StorageListener listener){
+      // Create a reference with an initial file path and name
+      StorageReference pathReference = storageRef.child(pathFireImg);
+      Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
+      // Create a reference to a file from a Google Cloud Storage URI
+      storageRef.child(pathFireImg).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+          @Override
+          public void onSuccess(byte[] bytes) {
+              // Data for "images/island.jpg" is returns, use this as needed
+              Bitmap bitmap = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
+              listener.onDownloadCompleteBitmap(bitmap);
+          }
+      }).addOnFailureListener(new OnFailureListener() {
+          @Override
+          public void onFailure(@NonNull Exception exception) {
+              listener.onError(exception.getMessage());
+          }
+      });
+
+  }
+
+    public void downloadImageUrlFromStorage(String pathFireImg, StorageListener listener){
+        // Create a reference with an initial file path and name
+        StorageReference pathReference = storageRef.child(pathFireImg);
+        Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
+        storageRef.child(pathFireImg).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                // Uri for "images/island.jpg" is returns, use this as needed
+                listener.onDownloadCompleteUrl(uri.toString());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                listener.onError(exception.getMessage());
+            }
+        });
+    }
 
   public void subscribeNotifications(Context context){
     String channelId  =  context.getString(R.string.default_notification_channel_id);

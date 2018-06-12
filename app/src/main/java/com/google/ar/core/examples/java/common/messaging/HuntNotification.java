@@ -12,7 +12,7 @@ public class HuntNotification implements Serializable{
     private String displayName;             // "Hunt AR App"
     private String hostedAnchorId;          // "ua-6d0c06b57559a5d39d04de6bbee7f171"
     private String identifyStatus;          // Public:"Created" -> Hidden:"Found"
-
+	private String notificationHint;        // Hint for the treasure
     private String notificationTitle;
     private String notificationMessage;
     private String notificationImageurl;
@@ -71,6 +71,14 @@ public class HuntNotification implements Serializable{
         return tn;
     }
 
+
+    public String getNotificationHint() {
+        return notificationHint;
+    }
+
+    public void setNotificationHint(String notificationHint) {
+        this.notificationHint = notificationHint;
+    }
     public Long getRoomId() {
         return roomId;
     }
@@ -159,6 +167,7 @@ public class HuntNotification implements Serializable{
                 ", displayName='" + displayName + '\'' +
                 ", hostedAnchorId='" + hostedAnchorId + '\'' +
                 ", identifyStatus='" + identifyStatus + '\'' +
+                ", notificationHint='" + notificationHint + '\'' +
                 ", notificationTitle='" + notificationTitle + '\'' +
                 ", notificationMessage='" + notificationMessage + '\'' +
                 ", notificationImageurl='" + notificationImageurl + '\'' +

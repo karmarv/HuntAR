@@ -58,7 +58,7 @@ public class BackgroundRenderer {
 
   /**
    * Allocates and initializes OpenGL resources needed by the background renderer. Must be called on
-   * the OpenGL thread, typically in {@link GLSurfaceView.Renderer#onSurfaceCreated(GL10,
+   * the OpenGL thread, typically in {@link GLSurfaceView.Renderer# onSurfaceCreated(GL10,
    * EGLConfig)}.
    *
    * @param context Needed to access shader source.

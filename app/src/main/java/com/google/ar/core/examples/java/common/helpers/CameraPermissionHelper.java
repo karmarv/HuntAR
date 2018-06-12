@@ -22,11 +22,14 @@ import android.net.Uri;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 
 /** Helper to ask camera permission. */
 public final class CameraPermissionHelper {
   private static final int CAMERA_PERMISSION_CODE = 0;
+  private static final int MY_PERMISSIONS_REQUEST_WRITE_STORAGE = 1;
   private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
+  private static final String STORAGE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
   /** Check to see we have the necessary permissions for this app. */
   public static boolean hasCameraPermission(Activity activity) {
@@ -52,4 +55,22 @@ public final class CameraPermissionHelper {
     intent.setData(Uri.fromParts("package", activity.getPackageName(), null));
     activity.startActivity(intent);
   }
+
+    // Permissions
+    public static boolean hasFilePermission(Activity activity) {
+        int result = ContextCompat.checkSelfPermission(activity, STORAGE_PERMISSION);
+        Log.w("My App Permissions: ", ""+result);
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static void requestFilePermission(Activity activity){
+        // No explanation needed; request the permission
+        ActivityCompat.requestPermissions(activity,
+                new String[]{STORAGE_PERMISSION},
+                MY_PERMISSIONS_REQUEST_WRITE_STORAGE);
+    }
+    /** Check to see if we need to show the rationale for this permission. */
+    public static boolean shouldShowRequestFilePermissionRationale(Activity activity) {
+        return ActivityCompat.shouldShowRequestPermissionRationale(activity, STORAGE_PERMISSION);
+    }
 }

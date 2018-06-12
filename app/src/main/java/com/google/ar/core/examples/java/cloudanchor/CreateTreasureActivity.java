@@ -20,9 +20,12 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.support.annotation.GuardedBy;
 import android.support.design.widget.TextInputEditText;
@@ -72,9 +75,12 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.common.base.Preconditions;
 import com.google.firebase.database.DatabaseError;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.IntBuffer;
 import java.util.Collection;
+import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -172,14 +178,19 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
   private TreasureType treasureType;
   private RoomCodeAndCloudAnchorIdListener hostListener;
 
+  private HuntNotification mHuntNotification;
+  private Bitmap mHintImage;
 
-  //region Activity lifecycle
+
+    //region Activity lifecycle
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_create_treasure);
     mLogger = new Logger("CreateTreasure");
-
+    mHuntNotification = new HuntNotification(0L,"");
+    mHintImage = null;
     Intent intent = getIntent();
     String treasureTypeString = intent.getExtras().getString("type","treasure");
       if (treasureTypeString.equals("treasure")) {
@@ -515,7 +526,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       // If not tracking, don't draw 3d objects.
       if (cameraTrackingState == TrackingState.PAUSED) {
           summaryString+="TRACKING_PAUSED_NO_DRAW";
-          //mLogger.logInfo(summaryString);
+          mLogger.logInfo(summaryString);
           return;
       }
 
@@ -566,12 +577,12 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
               snackbarHelper.showMessageWithAction(CreateTreasureActivity.this, getString(R.string.treasure_relocated),this);
 
               //TBD: To Be removed after the share dialog is stable.
-              /*this.runOnUiThread(new Runnable() {
+              this.runOnUiThread(new Runnable() {
                   public void run() {
-                     //onShareTreasure();
-                    uploadTreasure();
+                     onShareTreasure();
+                    //uploadTreasure();
                   }
-              });*/
+              });
 
           }
         float[] colorCorrectionRgba = new float[4];
@@ -591,12 +602,17 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
             takePicture = false;
             treasureBitmap = getCurrentPicture();
             if (isTreasureEditDialogOpen) {
-                treasureImageView.setImageBitmap(treasureBitmap);
-                treasureImageProgressBar.setVisibility(View.GONE);
-                mLogger.logInfo("Dialog was open");
+                this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        treasureImageView.setImageBitmap(treasureBitmap);
+                        treasureImageProgressBar.setVisibility(View.GONE);
+                        mLogger.logInfo("Dialog was open");
+                    }
+                });
+
             }
             else{
-                //mLogger.logInfo("");
+                mLogger.logInfo("");
             }
         }
     } catch (Throwable t) {
@@ -605,7 +621,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
     }
 
     summaryString+= ", Creation State: "+creationState.name();
-    //mLogger.logInfo("S:"+summaryString);
+    //mLogger.logInfo("S:"+summaryString); // TODO: comment out in production
   }
 
   /** Sets the new value of the current anchor. Detaches the old anchor, if it was non-null. */
@@ -712,18 +728,24 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
           String letter = "";
           if (treasureType == TreasureType.LETTER) {
               letter = ((TextInputEditText) dialog.findViewById(R.id.letterEditText)).getText().toString();
+ 			  mHuntNotification.setNotificationMessage(letter);
           }
           String hint = ((TextInputEditText) dialog.findViewById(R.id.hintEditText)).getText().toString();
-          Bitmap hintImage = null; //todo
+
+          BitmapDrawable drawable = (BitmapDrawable)((ImageView)dialog.findViewById(R.id.treasureImageView)).getDrawable();
+          mHintImage = drawable.getBitmap();
+
           dialog.dismiss();
           uploadProgressLayout.setVisibility(View.VISIBLE);
-
+          mHuntNotification.setNotificationHint(hint);
+          // Upload the image to firebase with link
           //todo actually upload anchor
           final Handler timerHandler = new Handler();
           Runnable timerRunnable = new Runnable() {
             @Override
             public void run() {
               uploadProgressLayout.setVisibility(View.GONE);
+			  uploadTreasure();
               openTreasureUploadedDialog();
             }
           };
@@ -742,6 +764,11 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
 
   private void openTreasureUploadedDialog() {
     final Dialog dialog = new Dialog(CreateTreasureActivity.this);
+
+    if (!CameraPermissionHelper.hasFilePermission(this)) {
+      CameraPermissionHelper.requestFilePermission(this);
+      return;
+    }
 
     //setting custom layout to dialog
     dialog.setContentView(R.layout.treasure_uploaded_dialog);
@@ -819,10 +846,11 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
    * Listens for both a new room code and an anchor ID, and shares the anchor ID in Firebase with
    * the room code when both are available.
    */
-  private final class RoomCodeAndCloudAnchorIdListener implements CloudAnchorManager.CloudAnchorListener, FirebaseManager.RoomCodeListener {
+  private final class RoomCodeAndCloudAnchorIdListener implements CloudAnchorManager.CloudAnchorListener, FirebaseManager.RoomCodeListener, FirebaseManager.StorageListener {
 
-    private Long roomCode;
-    private String cloudAnchorId;
+
+      private Long roomCode;
+      private String cloudAnchorId;
 
     @Override
     public void onNewRoomCode(Long newRoomCode) {
@@ -860,6 +888,17 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       cloudAnchorId = anchor.getCloudAnchorId();
       setNewAnchor(anchor);
       checkAndMaybeShare();
+
+      // Send out notification. Upload image to firebase storage and set the URL
+      String imageFireUploadedPath = firebaseManager.uploadImageToStorage
+                (roomCode+"_hint.jpg", mHintImage, hostListener);
+      mHuntNotification.setNotificationImageurl(imageFireUploadedPath);
+      Log.i(TAG, "Download initiated for this image");
+      mHuntNotification.setRoomId(roomCode);
+      mHuntNotification.setHostedAnchorId(cloudAnchorId);
+      firebaseManager.sendUpstreamMessage(getApplicationContext(), mHuntNotification);
+      Log.i(TAG, "Broadcast Cloud Anchor Notification: "+mHuntNotification);
+
     }
 
     private void checkAndMaybeShare() {
@@ -870,15 +909,45 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       firebaseManager.storeAnchorIdInRoom(roomCode, cloudAnchorId);
       mLogger.logInfo(">>> Store");
       snackbarHelper.showMessageWithDismiss(
-          CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared));
+	  CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared, new Object[]{roomCode}));
 
        // Toast.makeText(getApplicationContext(),
        //         "RoomCode: "+roomCode+", CloudAnchorId:"+cloudAnchorId, Toast.LENGTH_LONG).show();
-
-      HuntNotification tn = new HuntNotification(roomCode, cloudAnchorId);
-      // Send out notification
-      firebaseManager.sendUpstreamMessage(getApplicationContext(), tn);
     }
+
+      @Override
+      public void onDownloadCompleteUrl(String imageUrl) {
+        Log.i(TAG, "URL Download complete, "+imageUrl);
+      }
+
+      @Override
+      public void onDownloadCompleteBitmap(Bitmap bitmap) {
+          Log.i(TAG, "Bmp Download complete, "+bitmap.getHeight()+"x"+bitmap.getWidth());
+          String filename = "pippo.png";
+          File folder = new File(Environment.getExternalStorageDirectory().getPath()+"/Download/");
+          //Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+          try {
+              File dest = new File(folder, filename);
+              FileOutputStream out = new FileOutputStream(dest);
+              bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+              out.flush();
+              out.close();
+          } catch (Exception e) {
+              Log.e(TAG, e.getMessage());
+          }
+      }
+
+      @Override
+      public void onUploadCompleteUrl(String imageUrl) {
+          // Download and test the image
+         // firebaseManager.downloadImageFromStorage(roomCode+"_hint.jpg", hostListener);
+      }
+
+      @Override
+      public void onError(String error) {
+          Log.e(TAG, "Exception, "+error);
+      }
+
   }
 
   //endregion
