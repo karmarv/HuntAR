@@ -349,7 +349,7 @@ public class HomeActivity extends AppCompatActivity implements GLSurfaceView.Ren
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+        if (!CameraPermissionHelper.hasPermissions(this)) {
             Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
                     .show();
             if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {

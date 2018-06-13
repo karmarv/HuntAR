@@ -2,7 +2,9 @@ package com.google.ar.core.examples.java.cloudanchor;
 
 import android.graphics.Bitmap;
 
-public class Treasure {
+import java.io.Serializable;
+
+public class Treasure implements Serializable {
 
 
 
@@ -10,6 +12,7 @@ public class Treasure {
     private String hint;
     private CreateTreasureActivity.TreasureType treasureType;
     private Bitmap hintPicture;
+    private String hintPictureUrl;
     private double longtitude;
     private double latitude;
 
@@ -31,6 +34,14 @@ public class Treasure {
 
     public void setTrackingThisTreasure(boolean trackingThisTreasure) {
         isTrackingThisTreasure = trackingThisTreasure;
+    }
+
+    public String getHintPictureUrl() {
+        return hintPictureUrl;
+    }
+
+    public void setHintPictureUrl(String hintPictureUrl) {
+        this.hintPictureUrl = hintPictureUrl;
     }
 
 

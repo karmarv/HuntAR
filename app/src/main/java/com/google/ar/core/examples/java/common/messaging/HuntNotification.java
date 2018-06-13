@@ -12,7 +12,8 @@ public class HuntNotification implements Serializable{
     private String displayName;             // "Hunt AR App"
     private String hostedAnchorId;          // "ua-6d0c06b57559a5d39d04de6bbee7f171"
     private String identifyStatus;          // Public:"Created" -> Hidden:"Found"
-
+    private double latitude;
+    private double longitude;
     private String notificationTitle;
     private String notificationMessage;
     private String notificationImageurl;
@@ -69,6 +70,22 @@ public class HuntNotification implements Serializable{
     public HuntNotification fromJson(String json){
         HuntNotification tn = new Gson().fromJson(json, HuntNotification.class);
         return tn;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public Long getRoomId() {
@@ -159,6 +176,8 @@ public class HuntNotification implements Serializable{
                 ", displayName='" + displayName + '\'' +
                 ", hostedAnchorId='" + hostedAnchorId + '\'' +
                 ", identifyStatus='" + identifyStatus + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
                 ", notificationTitle='" + notificationTitle + '\'' +
                 ", notificationMessage='" + notificationMessage + '\'' +
                 ", notificationImageurl='" + notificationImageurl + '\'' +

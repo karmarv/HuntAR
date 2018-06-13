@@ -293,8 +293,6 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
 
     // Initialize the messaging
     firebaseManager.subscribeNotifications(getApplicationContext());
-
-
   }
   @Override
   protected void onResume() {
@@ -864,6 +862,12 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
     }
 
     @Override
+    public void onFetchNotificationsData() {
+      Log.i(TAG, "Fetch notification from database.");
+    }
+
+
+    @Override
     public void onCloudTaskComplete(Anchor anchor) {
       CloudAnchorState cloudState = anchor.getCloudAnchorState();
       if (cloudState.isError()) {
@@ -876,7 +880,6 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
           cloudAnchorId == null, "The cloud anchor ID cannot have been set before.");
       cloudAnchorId = anchor.getCloudAnchorId();
       setNewAnchor(anchor);
-      checkAndMaybeShare();
 
       // Send out notification. Upload image to firebase storage and set the URL
       String imageFireUploadedPath = firebaseManager.uploadImageToStorage
@@ -887,6 +890,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       mHuntNotification.setHostedAnchorId(cloudAnchorId);
       firebaseManager.sendUpstreamMessage(getApplicationContext(), mHuntNotification);
       Log.i(TAG, "Broadcast Cloud Anchor Notification: "+mHuntNotification);
+      checkAndMaybeShare();
 
     }
 
@@ -895,7 +899,9 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
         return;
       }
       mLogger.logInfo(">>> RoomCode: "+roomCode+", CloudAnchorId:"+cloudAnchorId);
-      firebaseManager.storeAnchorIdInRoom(roomCode, cloudAnchorId);
+      mHuntNotification.setRoomId(roomCode);
+      mHuntNotification.setHostedAnchorId(cloudAnchorId);
+      firebaseManager.storeAnchorIdInRoom(mHuntNotification);
       mLogger.logInfo(">>> Store");
       snackbarHelper.showMessageWithDismiss(
           CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared, new Object[]{roomCode}));

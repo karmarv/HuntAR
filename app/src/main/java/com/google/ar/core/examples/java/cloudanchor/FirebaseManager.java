@@ -39,6 +39,7 @@ import com.google.ar.core.examples.java.common.messaging.AppController;
 import com.google.ar.core.examples.java.common.messaging.HuntNotification;
 import com.google.common.base.Preconditions;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -57,6 +58,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -71,6 +73,8 @@ public class FirebaseManager {
     void onNewRoomCode(Long newRoomCode);
     /** Invoked if a Firebase Database Error happened while fetching the room code. */
     void onError(DatabaseError error);
+
+    void onFetchNotificationsData();
   }
 
   /** Listener for a new cloud anchor ID. */
@@ -85,6 +89,8 @@ public class FirebaseManager {
     void onUploadCompleteUrl(String imageUrl);
     void onDownloadCompleteBitmap(Bitmap bitmap);
     void onError(String error);
+
+
   }
 
   // Names of the nodes used in the Firebase Database
@@ -92,12 +98,19 @@ public class FirebaseManager {
   private static final String ROOT_LAST_ROOM_CODE = "last_room_code";
 
   // Some common keys and values used when writing to the Firebase Database.
-  private static final String KEY_IDENTIFY_STATUS = "identify_status";
-  private static final String KEY_NOTIFICATION_STATUS = "notification_status";
-  private static final String KEY_NOTIFICATION_MSG = "notification_msg";
+  private static final String KEY_ROOM_ID = "room_id";
+  private static final String KEY_TYPE = "type";
   private static final String KEY_DISPLAY_NAME = "display_name";
   private static final String KEY_ANCHOR_ID = "hosted_anchor_id";
-  private static final String KEY_TIMESTAMP = "updated_at_timestamp";
+  private static final String KEY_IDENTIFY_STATUS = "identify_status";
+  private static final String KEY_LATITUDE = "latitude";
+  private static final String KEY_LONGITUDE = "longitude";
+  private static final String KEY_NOTIFICATION_TITLE = "notification_title";
+  private static final String KEY_NOTIFICATION_MESSAGE = "notification_message";
+  private static final String KEY_NOTIFICATION_IMAGEURL = "notification_imageurl";
+  private static final String KEY_NOTIFICATION_STATUS = "notification_status";
+  private static final String KEY_TIMESTAMP = "updated_at";
+  // Values
   private static final String DISPLAY_NAME_VALUE = "Hunt AR App";
 
   private static String SERVER_API_KEY= "AIzaSyAEZkjyxfBtXdvgFo5toXaoxhS79K4gEVo";
@@ -108,6 +121,8 @@ public class FirebaseManager {
   private DatabaseReference currentRoomRef = null;
   private ValueEventListener currentRoomListener = null;
   private StorageReference storageRef = null;
+
+  private static Map<String, Treasure> notificationStoreMap = new HashMap<>();
 
   /**
    * Default constructor for the FirebaseManager.
@@ -120,6 +135,27 @@ public class FirebaseManager {
       // Initialize the Database reference
       DatabaseReference rootRef = FirebaseDatabase.getInstance(app).getReference();
       hotspotListRef = rootRef.child(ROOT_FIREBASE_HOTSPOTS);
+      hotspotListRef.addValueEventListener(new ValueEventListener() {
+          @Override
+          public void onDataChange(DataSnapshot dataSnapshot) {
+              for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
+                  Log.i(TAG, "\n\nKey  : " + childDataSnapshot.getKey()); //displays the key for the node
+                  Log.i(TAG, "Value: " + childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue());   //gives the value for given keyname
+
+                  Treasure t = new Treasure("Expires in: 3 mins",
+                            "Look behind the fence", CreateTreasureActivity.TreasureType.TREASURE_CHEST,
+                          null,0, 0, true);
+                  notificationStoreMap.put(childDataSnapshot.getKey(), t);
+              }
+          }
+
+          @Override
+          public void onCancelled(DatabaseError databaseError) {
+              // Getting Post failed, log a message
+              Log.w(TAG, "loadPost:onCancelled", databaseError.toException());
+          }
+      });
+
       roomCodeRef = rootRef.child(ROOT_LAST_ROOM_CODE);
 
       DatabaseReference.goOnline();
@@ -135,6 +171,27 @@ public class FirebaseManager {
       roomCodeRef = null;
     }
   }
+
+
+    public void downloadCacheImageFromStorage(String key, String pathFireImg){
+        // Create a reference with an initial file path and name
+        StorageReference pathReference = storageRef.child(pathFireImg);
+        Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
+        // Create a reference to a file from a Google Cloud Storage URI
+        storageRef.child(pathFireImg).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                // Data for "images/island.jpg" is returns, use this as needed
+                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Log.e(TAG, "Error downloading from Firebase Database!");
+            }
+        });
+
+    }
 
   /**
    * Upload image to firebase storage and return the file path
@@ -220,6 +277,11 @@ public class FirebaseManager {
     });
   }
 
+
+    public void downloadNotifications(HuntNotification huntNotification, RoomCodeListener listener){
+
+
+    }
 
 
   public void subscribeNotifications(Context context){
@@ -360,15 +422,21 @@ essage!"}}' https://fcm.googleapis.com/fcm/send
   }
 
   /** Stores the given anchor ID in the given room code. */
-  void storeAnchorIdInRoom(Long roomCode, String cloudAnchorId) {
-    Preconditions.checkNotNull(app, "Firebase App was null");
-    DatabaseReference roomRef = hotspotListRef.child(String.valueOf(roomCode));
-    roomRef.child(KEY_DISPLAY_NAME).setValue(DISPLAY_NAME_VALUE);
-    roomRef.child(KEY_ANCHOR_ID).setValue(cloudAnchorId);
-    roomRef.child(KEY_NOTIFICATION_MSG).setValue("Notification: You should look for treasure id "+roomCode);
-    roomRef.child(KEY_NOTIFICATION_STATUS).setValue("Created"); // Created -> Read -> Started
-    roomRef.child(KEY_IDENTIFY_STATUS).setValue("None");
-    roomRef.child(KEY_TIMESTAMP).setValue(Long.valueOf(System.currentTimeMillis()));
+  void storeAnchorIdInRoom(HuntNotification huntNotification) { // Long roomCode, String cloudAnchorId
+      Preconditions.checkNotNull(app, "Firebase App was null");
+      DatabaseReference roomRef = hotspotListRef.child(String.valueOf(huntNotification.getRoomId()));
+      roomRef.child(KEY_ROOM_ID).setValue(huntNotification.getRoomId());
+      roomRef.child(KEY_TYPE).setValue(huntNotification.getType());
+      roomRef.child(KEY_DISPLAY_NAME).setValue(DISPLAY_NAME_VALUE);
+      roomRef.child(KEY_ANCHOR_ID).setValue(huntNotification.getHostedAnchorId());
+      roomRef.child(KEY_IDENTIFY_STATUS).setValue(huntNotification.getIdentifyStatus());
+      roomRef.child(KEY_NOTIFICATION_TITLE).setValue(huntNotification.getNotificationTitle());
+      roomRef.child(KEY_NOTIFICATION_MESSAGE).setValue(huntNotification.getNotificationMessage());
+      roomRef.child(KEY_NOTIFICATION_IMAGEURL).setValue(huntNotification.getNotificationImageurl());
+      roomRef.child(KEY_NOTIFICATION_STATUS).setValue(huntNotification.getNotificationStatus());
+      roomRef.child(KEY_LATITUDE).setValue(huntNotification.getLatitude());
+      roomRef.child(KEY_LONGITUDE).setValue(huntNotification.getLongitude());
+      roomRef.child(KEY_TIMESTAMP).setValue(Long.valueOf(System.currentTimeMillis()));
   }
 
   /**

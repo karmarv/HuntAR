@@ -93,10 +93,14 @@ import javax.microedition.khronos.opengles.GL10;
  * API calls. This app only has at most one anchor at a time, to focus more on the cloud aspect of
  * anchors.
  */
-public class HuntTreasureActivity extends AppCompatActivity implements GLSurfaceView.Renderer, TreasureRecycler.OnTreasureRecyclerRequest, SnackbarHelper.SnackbarListener{
+public class HuntTreasureActivity extends AppCompatActivity implements GLSurfaceView.Renderer,
+                                            TreasureRecycler.OnTreasureRecyclerRequest,
+                                            SnackbarHelper.SnackbarListener{
 
     private static final String TAG = HuntTreasureActivity.class.getSimpleName();
     private Logger mLogger;
+
+    private static String hintImageFilePath = "";
 
     private enum HostResolveMode {
         NONE,
@@ -148,6 +152,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
 
     // Firebase Messaging
     private String fireToken;
+    private HuntNotification mHuntNotification;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +162,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         // Initialize the surface
         surfaceView = findViewById(R.id.surfaceview);
         displayRotationHelper = new DisplayRotationHelper(this);
+        mHuntNotification = new HuntNotification(0L,"");
 
         mapView = findViewById(R.id.mapView);
         mapView.setOnClickListener(new View.OnClickListener() {
@@ -245,17 +251,17 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
             if(extras.containsKey("data"))
             {
                 hostListener = new RoomCodeAndCloudAnchorIdListener();
-
-                HuntNotification  hn = new HuntNotification(0L,"");
-                hn = hn.fromJson(extras.getString("data"));
-                Log.i(TAG, hn.toString());
-                Toast.makeText(HuntTreasureActivity.this, hn.toString(), Toast.LENGTH_LONG).show();
+                mHuntNotification = mHuntNotification.fromJson(extras.getString("data"));
+                Log.i(TAG, mHuntNotification.toString());
+                Toast.makeText(HuntTreasureActivity.this, mHuntNotification.toString(), Toast.LENGTH_LONG).show();
 
                 // Download and test the image, run it as a background task.
-                //
-                final String imageUrl = hn.getNotificationImageurl();
+                final String imageUrl = mHuntNotification.getNotificationImageurl();
                 this.runOnUiThread(new Runnable() {
                     public void run() {
+                        // Download treasure data from firebase database
+                        firebaseManager.downloadNotifications(mHuntNotification, hostListener);
+                        // Download image from storage
                         firebaseManager.downloadImageFromStorage(imageUrl, hostListener);
                     }
                 });
@@ -749,7 +755,12 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
           HuntTreasureActivity.this, getString(R.string.snackbar_firebase_error));
     }
 
-    @Override
+      @Override
+      public void onFetchNotificationsData() {
+          Log.i(TAG, "Fetch notification from database.");
+      }
+
+      @Override
     public void onCloudTaskComplete(Anchor anchor) {
       CloudAnchorState cloudState = anchor.getCloudAnchorState();
       if (cloudState.isError()) {
@@ -772,10 +783,10 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         return;
       }
       Log.i(TAG, "Store anchor id");
-      firebaseManager.storeAnchorIdInRoom(roomCode, cloudAnchorId);
+      //firebaseManager.storeAnchorIdInRoom(roomCode, cloudAnchorId);
       Log.i(TAG, "Stored anchor id "+ cloudAnchorId + " in room "+roomCode);
-      snackbarHelper.showMessageWithDismiss(
-          HuntTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared));
+      //snackbarHelper.showMessageWithDismiss(
+      //    HuntTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared));
     }
 
     /**
@@ -817,7 +828,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
               out.flush();
               out.close();
               Log.i(TAG, "Downloaded image to path: "+dest.getAbsolutePath());
-
+              hintImageFilePath = dest.getAbsolutePath();
           } catch (Exception e) {
               Log.e(TAG, e.getMessage());
           }
