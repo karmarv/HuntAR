@@ -86,6 +86,9 @@ public class TreasureRecycler extends RecyclerView.Adapter<RecyclerView.ViewHold
         mItems.add(treasure);
         notifyItemInserted(mItems.size()-1);
     }
+    public Treasure getTreasureAtIndex(int index) {
+        return mItems.get(index);
+    }
 
     @Override
     public int getItemCount() {
