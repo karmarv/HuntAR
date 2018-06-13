@@ -735,18 +735,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
 
           dialog.dismiss();
           uploadProgressLayout.setVisibility(View.VISIBLE);
-
-          //todo actually upload anchor
-          final Handler timerHandler = new Handler();
-          Runnable timerRunnable = new Runnable() {
-            @Override
-            public void run() {
-              uploadProgressLayout.setVisibility(View.GONE);
-              uploadTreasure();
-              openTreasureUploadedDialog();
-            }
-          };
-          timerHandler.postDelayed(timerRunnable, 5000);
+          uploadTreasure();
       }
     });
     dialog.show();
@@ -846,8 +835,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
     public void onNewRoomCode(Long newRoomCode) {
       Preconditions.checkState(roomCode == null, "The room code cannot have been set before.");
       roomCode = newRoomCode;
-      snackbarHelper.showMessageWithDismiss(
-          CreateTreasureActivity.this, getString(R.string.snackbar_room_code_available));
+      //snackbarHelper.showMessageWithDismiss(         CreateTreasureActivity.this, getString(R.string.snackbar_room_code_available));
       checkAndMaybeShare();
       synchronized (singleTapLock) {
         // Change hostResolveMode to HOSTING after receiving the room code (not when the 'Host' button
@@ -906,9 +894,9 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       mHuntNotification.setHostedAnchorId(cloudAnchorId);
       firebaseManager.storeAnchorIdInRoom(mHuntNotification);
       mLogger.logInfo(">>> Store");
-      snackbarHelper.showMessageWithDismiss(
-          CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared, new Object[]{roomCode}));
-
+      //snackbarHelper.showMessageWithDismiss(CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared, new Object[]{roomCode}));
+      openTreasureUploadedDialog();
+      uploadProgressLayout.setVisibility(View.GONE);
        // Toast.makeText(getApplicationContext(),
        //         "RoomCode: "+roomCode+", CloudAnchorId:"+cloudAnchorId, Toast.LENGTH_LONG).show();
 
