@@ -154,6 +154,8 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     private String fireToken;
     private HuntNotification mHuntNotification;
 
+    private TreasureRecycler treasureAdapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -236,7 +238,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         mTreasures.add(new Treasure("Expires in: 3 hours", "Look under the fence", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
         mTreasures.add(new Treasure("Expires in: 2 hours", "Behind you Satish!", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
         mTreasures.add(new Treasure("Expires in: 1h45m", "Ask your mom", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, 0, 0, false));
-        TreasureRecycler treasureAdapter = new TreasureRecycler(this, mTreasures);
+        treasureAdapter = new TreasureRecycler(this, mTreasures);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         recyclerView.setAdapter(treasureAdapter);
@@ -702,13 +704,21 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     @Override
     public void onHintClicked(int treasureIndex) {
         mLogger.logInfo("OnHintClicked at treasure:"+ Integer.toString(treasureIndex));
+        String hint = treasureAdapter.getTreasureAtIndex(treasureIndex).getHint();
+        Toast.makeText(HuntTreasureActivity.this, hint, Toast.LENGTH_LONG).show();
+
 
     }
 
     @Override
     public void onPictureHintClicked(int treasureIndex) {
         mLogger.logInfo("OnPictureHintClicked at treasure:"+ Integer.toString(treasureIndex));
-
+        Dialog pictureDialog = new Dialog(HuntTreasureActivity.this);
+        pictureDialog.setContentView(R.layout.picture_hint_dialog);
+        ImageView hintPicture = pictureDialog.findViewById(R.id.image);
+        //hintPicture.setImageBitmap(bitmap);
+        //todo setRealImage
+        pictureDialog.show();
     }
 
     @Override
