@@ -49,6 +49,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.ar.core.Anchor;
 import com.google.ar.core.Anchor.CloudAnchorState;
 import com.google.ar.core.ArCoreApk;
@@ -64,10 +69,11 @@ import com.google.ar.core.PointCloud;
 import com.google.ar.core.Session;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
-import com.google.ar.core.examples.java.common.helpers.CameraPermissionHelper;
+import com.google.ar.core.examples.java.common.helpers.AppPermissionHelper;
 import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper;
 import com.google.ar.core.examples.java.common.helpers.FullScreenHelper;
 import com.google.ar.core.examples.java.common.helpers.SnackbarHelper;
+import com.google.ar.core.examples.java.common.messaging.AppController;
 import com.google.ar.core.examples.java.common.messaging.HuntNotification;
 import com.google.ar.core.examples.java.common.messaging.MyFirebaseMessagingService;
 import com.google.ar.core.examples.java.common.rendering.BackgroundRenderer;
@@ -82,13 +88,19 @@ import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 import com.google.common.base.Preconditions;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -163,7 +175,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         setContentView(R.layout.activity_hunt_treasure);
         mLogger = new Logger("HuntTreasureActivity");
         // Initialize the surface
-        surfaceView = findViewById(R.id.surfaceview_hunt);
+        surfaceView = findViewById(R.id.surfaceview);
         displayRotationHelper = new DisplayRotationHelper(this);
 
         mapView = findViewById(R.id.mapView);
@@ -173,13 +185,6 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
                 startMapDialog();
             }
         });
-
-
-        if (!CameraPermissionHelper.hasFilePermission(this)) {
-            CameraPermissionHelper.requestFilePermission(this);
-            return;
-        }
-
 
         /**
          *  -------------------------------------ARCORE---------------------------------------------
@@ -257,15 +262,15 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         if(extras != null){
             if(extras.containsKey("data"))
             {
- 				hostListener = new RoomCodeAndCloudAnchorIdListener();
+                hostListener = new RoomCodeAndCloudAnchorIdListener();
 
                 HuntNotification  hn = new HuntNotification(0L,"");
                 hn = hn.fromJson(extras.getString("data"));
                 Log.i(TAG, hn.toString());
                 Toast.makeText(HuntTreasureActivity.this, hn.toString(), Toast.LENGTH_LONG).show();
 
-                // Download and test the image
-                firebaseManager.downloadImageFromStorage(hn.getNotificationImageurl(), hostListener);
+                // Download and test the image, run it as a background task.
+                //firebaseManager.downloadImageFromStorage(hn.getNotificationImageurl(), hostListener);
             }
         }
 
@@ -349,11 +354,10 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
 
         // ARCore requires camera permissions to operate. If we did not yet obtain runtime
         // permission on Android M and above, now is a good time to ask the user for it.
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
-            CameraPermissionHelper.requestCameraPermission(this);
+        if (!AppPermissionHelper.hasCameraPermission(this)) {
+            AppPermissionHelper.requestCameraPermission(this);
           return;
         }
-
         session = new Session(this);
       } catch (UnavailableArcoreNotInstalledException e) {
         messageId = R.string.snackbar_arcore_unavailable;
@@ -416,12 +420,12 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-    if (!CameraPermissionHelper.hasCameraPermission(this)) {
+    if (!AppPermissionHelper.hasCameraPermission(this)) {
       Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
           .show();
-      if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
+      if (!AppPermissionHelper.shouldShowRequestPermissionRationale(this)) {
         // Permission denied with checking "Do not ask again".
-          CameraPermissionHelper.launchPermissionSettings(this);
+          AppPermissionHelper.launchPermissionSettings(this);
       }
       finish();
     }
@@ -716,11 +720,12 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
    * the room code when both are available.
    */
   private final class RoomCodeAndCloudAnchorIdListener
-      implements CloudAnchorManager.CloudAnchorListener, FirebaseManager.RoomCodeListener, FirebaseManager.StorageListener, MyFirebaseMessagingService.FireNotificationListener {
+      implements CloudAnchorManager.CloudAnchorListener, FirebaseManager.RoomCodeListener,
+          FirebaseManager.StorageListener, MyFirebaseMessagingService.FireNotificationListener {
 
     private Long roomCode;
     private String cloudAnchorId;
-	private Bitmap bitmap;
+    private Bitmap bitmap;
 
     @Override
     public void onNewRoomCode(Long newRoomCode) {
@@ -779,13 +784,12 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
      *
      * @param notification
      */
-    @Override
-    public void onFireNotification(String notification) {
-      Log.i(TAG, "From Cloud: "+notification);
-      snackbarHelper.showMessageWithDismiss(
+     @Override
+     public void onFireNotification(String notification) {
+       Log.i(TAG, "From Cloud: "+notification);
+       snackbarHelper.showMessageWithDismiss(
               HuntTreasureActivity.this, "From Cloud: "+notification);
-    }
-
+     }
 
       @Override
       public void onDownloadCompleteUrl(String imageUrl) {
@@ -802,26 +806,24 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
 
       @Override
       public void onDownloadCompleteBitmap(Bitmap bitmap) {
-        this.bitmap = bitmap;
-        Log.i(TAG, "Bmp Download complete, "+bitmap.getHeight()+"x"+bitmap.getWidth());
-        String filename = "pippo.png";
-        File folder = new File(Environment.getExternalStorageDirectory().getPath()+"/Download/");
-        //Bitmap bitmap = (Bitmap)data.getExtras().get("data");
-        try {
+          this.bitmap = bitmap;
+          Log.i(TAG, "Bmp Download complete, "+bitmap.getHeight()+"x"+bitmap.getWidth());
+          String filename = "pippo.png";
+          File folder = new File(Environment.getExternalStorageDirectory().getPath()+"/Download/");
+          //Bitmap bitmap = (Bitmap)data.getExtras().get("data");
+          try {
               File dest = new File(folder, filename);
               FileOutputStream out = new FileOutputStream(dest);
               bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
               out.flush();
               out.close();
-            snackbarHelper.showMessageWithDismiss(
-                    HuntTreasureActivity.this, "Downloaded image to path: "+dest.getAbsolutePath());
-        } catch (Exception e) {
+              snackbarHelper.showMessageWithDismiss(
+                      HuntTreasureActivity.this, "Downloaded image to path: "+dest.getAbsolutePath());
+          } catch (Exception e) {
               Log.e(TAG, e.getMessage());
-        }
+          }
 
       }
-
-
 
       @Override
       public void onError(String error) {
