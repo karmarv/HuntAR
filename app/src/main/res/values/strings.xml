@@ -40,12 +40,12 @@
   <string name="snackbar_dismiss">Dismiss</string>
   <string name="snackbar_firebase_error">There was a Firebase Error. Please check Logcat for more details.</string>
   <string name="snackbar_host_error">Hosting Error: %1$s</string>
-  <string name="snackbar_initial_message">Please select Host or Resolve to continue.</string>
+  <string name="snackbar_initial_message">Hunt view mode. Roam around slowly observing planes.</string>
   <string name="snackbar_on_host">Now in Hosting Mode. Press Cancel to Exit.</string>
-  <string name="snackbar_on_resolve">Now in Resolving Mode. Press Cancel to Exit.</string>
+  <string name="snackbar_on_resolve">Resolving objects in the room.</string>
   <string name="snackbar_resolve_error">Resolving Error: %1$s</string>
-  <string name="snackbar_resolve_success">The anchor was successfully resolved.</string>
-  <string name="snackbar_room_code_available">The room code is now available. Please place an anchor to host.</string>
+  <string name="snackbar_resolve_success">Attempting to load objects around you.</string>
+  <string name="snackbar_room_code_available">Sharing this anchor info to host.</string>
 
 
 	<string name="treasure_planes_looking">Move around slowly and possible treasure hiding spots might show up!</string>
@@ -63,7 +63,7 @@
   <string name="subscribe_to_news">Sub</string>
   <string name="log_token">Send</string>
 
-  <string name="msg_subscribed">Subscribed to News topic</string>
+  <string name="msg_subscribed">Subscribed to treasure notifications</string>
   <string name="msg_token_fmt" translatable="false">InstanceID Token: %s</string>
 
   <string name="default_notification_channel_id" translatable="false">fcm_default_channel</string>

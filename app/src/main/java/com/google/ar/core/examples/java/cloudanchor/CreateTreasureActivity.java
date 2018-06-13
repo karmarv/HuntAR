@@ -172,7 +172,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
   private final CloudAnchorManager cloudManager = new CloudAnchorManager();
   private HostResolveMode hostResolveMode;
   private CreationState creationState;
-  //private CreationState previousState;
+
   private TreasureType treasureType;
   private RoomCodeAndCloudAnchorIdListener hostListener;
 
@@ -720,12 +720,14 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       @Override
       public void onClick(View v) {
           String letter = "";
+        mHuntNotification.setType("treasure");
           if (treasureType == TreasureType.LETTER) {
               letter = ((TextInputEditText) dialog.findViewById(R.id.letterEditText)).getText().toString();
               mHuntNotification.setNotificationMessage(letter);
+              mHuntNotification.setType("letter");
           }
           String hint = ((TextInputEditText) dialog.findViewById(R.id.hintEditText)).getText().toString();
-
+          mHuntNotification.setIdentifyHint(hint);
           BitmapDrawable drawable = (BitmapDrawable)((ImageView)dialog.findViewById(R.id.treasureImageView)).getDrawable();
           mHintImage = drawable.getBitmap();
 
@@ -742,7 +744,6 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
               openTreasureUploadedDialog();
             }
           };
-
           timerHandler.postDelayed(timerRunnable, 5000);
       }
     });

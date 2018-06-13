@@ -59,7 +59,11 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /** A helper class to manage all communications with Firebase. */
@@ -103,6 +107,7 @@ public class FirebaseManager {
   private static final String KEY_DISPLAY_NAME = "display_name";
   private static final String KEY_ANCHOR_ID = "hosted_anchor_id";
   private static final String KEY_IDENTIFY_STATUS = "identify_status";
+  private static final String KEY_IDENTIFY_HINT="identify_hint";
   private static final String KEY_LATITUDE = "latitude";
   private static final String KEY_LONGITUDE = "longitude";
   private static final String KEY_NOTIFICATION_TITLE = "notification_title";
@@ -139,13 +144,39 @@ public class FirebaseManager {
           @Override
           public void onDataChange(DataSnapshot dataSnapshot) {
               for (DataSnapshot childDataSnapshot : dataSnapshot.getChildren()) {
-                  Log.i(TAG, "\n\nKey  : " + childDataSnapshot.getKey()); //displays the key for the node
-                  Log.i(TAG, "Value: " + childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue());   //gives the value for given keyname
+                  String  key = childDataSnapshot.getKey();
+                  Log.i(TAG, "\n\nKey  : " + key); //displays the key for the node
+                  Log.i(TAG, "Value: " + childDataSnapshot.getValue());   //gives the value for given keyname
+                  try {
+                      if(childDataSnapshot.child(KEY_IDENTIFY_STATUS).getValue() != null &&
+                              !childDataSnapshot.child(KEY_IDENTIFY_STATUS).getValue().toString().equalsIgnoreCase("created")){
+                          continue; // Skip the ones marked found
+                      }
 
-                  Treasure t = new Treasure("Expires in: 3 mins",
-                            "Look behind the fence", CreateTreasureActivity.TreasureType.TREASURE_CHEST,
-                          null,0, 0, true);
-                  notificationStoreMap.put(childDataSnapshot.getKey(), t);
+                      Treasure t = new Treasure();
+                      t.setExpiration("Expires in: 8 mins");
+                      t.setRoomId(Integer.parseInt(key));
+                      if(childDataSnapshot.child(KEY_IDENTIFY_HINT).getValue() != null)
+                            t.setHint(childDataSnapshot.child(KEY_IDENTIFY_HINT).getValue().toString());
+                      if( childDataSnapshot.child(KEY_TYPE).getValue() != null) {
+                          if(childDataSnapshot.child(KEY_TYPE).getValue().toString().equalsIgnoreCase("treasure")) {
+                              t.setTreasureType(CreateTreasureActivity.TreasureType.TREASURE_CHEST);
+                          }else {
+                              t.setTreasureType(CreateTreasureActivity.TreasureType.LETTER);
+                          }
+                      }
+                      if(childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue() != null)
+                          t.setHintPictureUrl(childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue().toString());
+                      if(childDataSnapshot.child(KEY_LATITUDE).getValue() != null)
+                            t.setLatitude(Double.parseDouble(childDataSnapshot.child(KEY_LATITUDE).getValue().toString()));
+                      if(childDataSnapshot.child(KEY_LONGITUDE).getValue() != null)
+                          t.setLongitude(Double.parseDouble(childDataSnapshot.child(KEY_LONGITUDE).getValue().toString()));
+                      notificationStoreMap.put(key, t);
+                      downloadCacheImageFromStorage(key, (String) childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue());
+                      Log.i(TAG, t.toString());
+                  }catch(Exception e){
+                      Log.e(TAG, e.getMessage());
+                  }
               }
           }
 
@@ -172,7 +203,22 @@ public class FirebaseManager {
     }
   }
 
-
+  public List<Treasure> getAllTreasures(){
+      List<Treasure> sorted = new ArrayList<>(notificationStoreMap.values());
+      Collections.sort(sorted, new Comparator<Treasure>(){
+          public int compare(Treasure o1, Treasure o2){
+              if(o1.getRoomId() == o2.getRoomId())
+                  return 0;
+              return o1.getRoomId() > o2.getRoomId() ? -1 : 1;
+          }
+      });
+      return sorted;
+  }
+    /**
+     * Update the image bitmap in the local list
+     * @param key
+     * @param pathFireImg
+     */
     public void downloadCacheImageFromStorage(String key, String pathFireImg){
         // Create a reference with an initial file path and name
         StorageReference pathReference = storageRef.child(pathFireImg);
@@ -183,6 +229,8 @@ public class FirebaseManager {
             public void onSuccess(byte[] bytes) {
                 // Data for "images/island.jpg" is returns, use this as needed
                 Bitmap bitmap = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
+                Log.i(TAG, "Image "+pathFireImg+" is of size "+bitmap.getWidth()+"x"+bitmap.getHeight());
+                notificationStoreMap.get(key).setHintPicture(bitmap);
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -430,6 +478,7 @@ essage!"}}' https://fcm.googleapis.com/fcm/send
       roomRef.child(KEY_DISPLAY_NAME).setValue(DISPLAY_NAME_VALUE);
       roomRef.child(KEY_ANCHOR_ID).setValue(huntNotification.getHostedAnchorId());
       roomRef.child(KEY_IDENTIFY_STATUS).setValue(huntNotification.getIdentifyStatus());
+      roomRef.child(KEY_IDENTIFY_HINT).setValue(huntNotification.getIdentifyHint());
       roomRef.child(KEY_NOTIFICATION_TITLE).setValue(huntNotification.getNotificationTitle());
       roomRef.child(KEY_NOTIFICATION_MESSAGE).setValue(huntNotification.getNotificationMessage());
       roomRef.child(KEY_NOTIFICATION_IMAGEURL).setValue(huntNotification.getNotificationImageurl());

@@ -143,17 +143,21 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
 
     @GuardedBy("anchorLock")
     private Anchor anchor;
+    private int mWidth;
+    private int mHeight;
 
     // Cloud Anchor Components.
     private FirebaseManager firebaseManager;
     private final CloudAnchorManager cloudManager = new CloudAnchorManager();
     private HostResolveMode currentMode;
+
+    private Boolean isTreasureObjectReplaced = false;
+    private static CreateTreasureActivity.TreasureType treasureType = CreateTreasureActivity.TreasureType.TREASURE_CHEST;
     private RoomCodeAndCloudAnchorIdListener hostListener;
 
     // Firebase Messaging
     private String fireToken;
     private HuntNotification mHuntNotification;
-
     private TreasureRecycler treasureAdapter;
 
     @Override
@@ -221,8 +225,6 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         // Initialize Firebase messaging
         initializeFirebaseMessagingOnCreate();
 
-
-
         // Info from the push notification read here
         onNewIntent(getIntent());
     }
@@ -234,10 +236,11 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         RecyclerView recyclerView = dialog.findViewById(R.id.treasureRecycler);
         //todo fetch Treasures and sort them by distance
         List<Treasure> mTreasures = new ArrayList<>();
-        mTreasures.add(new Treasure("Expires in: 3 mins", "Look behind the fence", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, 0, 0, true));
-        mTreasures.add(new Treasure("Expires in: 3 hours", "Look under the fence", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
-        mTreasures.add(new Treasure("Expires in: 2 hours", "Behind you Satish!", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
-        mTreasures.add(new Treasure("Expires in: 1h45m", "Ask your mom", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, 0, 0, false));
+        //mTreasures.add(new Treasure("Expires in: 3 mins", "Look behind the fence", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, "",0, 0, true));
+        //mTreasures.add(new Treasure("Expires in: 3 hours", "Look under the fence", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
+        //mTreasures.add(new Treasure("Expires in: 2 hours", "Behind you Satish!", CreateTreasureActivity.TreasureType.LETTER, null, 0, 0, false));
+        //mTreasures.add(new Treasure("Expires in: 1h45m", "Ask your mom", CreateTreasureActivity.TreasureType.TREASURE_CHEST, null, 0, 0, false));
+        mTreasures.addAll(firebaseManager.getAllTreasures());
         treasureAdapter = new TreasureRecycler(this, mTreasures);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
@@ -255,8 +258,15 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
                 hostListener = new RoomCodeAndCloudAnchorIdListener();
                 mHuntNotification = mHuntNotification.fromJson(extras.getString("data"));
                 Log.i(TAG, mHuntNotification.toString());
-                Toast.makeText(HuntTreasureActivity.this, mHuntNotification.toString(), Toast.LENGTH_LONG).show();
+                Toast.makeText(HuntTreasureActivity.this, "Loading "+mHuntNotification.getType(), Toast.LENGTH_LONG).show();
 
+                if(mHuntNotification.getType().equalsIgnoreCase("treasure")){
+                    treasureType = CreateTreasureActivity.TreasureType.TREASURE_CHEST;
+                    GlobalVariables.OBJECT_ROTATION = 245.88f;
+                }else{
+                    treasureType = CreateTreasureActivity.TreasureType.LETTER;
+                    GlobalVariables.OBJECT_SCALE = 0.1f;
+                }
                 // Download and test the image, run it as a background task.
                 final String imageUrl = mHuntNotification.getNotificationImageurl();
                 this.runOnUiThread(new Runnable() {
@@ -310,27 +320,14 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
                 String msg = getString(R.string.msg_token_fmt, fireToken);
                 Log.i(TAG, msg);
                 HuntNotification tn = new HuntNotification(0L, "test");
+                tn.setNotificationTitle("A hunter sent out  a broadcast");
+                tn.setNotificationMessage("Hunter is looking for the treasure.");
                 firebaseManager.sendUpstreamMessage(getApplicationContext(), tn);
                 // Send out the notification
-                Toast.makeText(HuntTreasureActivity.this, msg, Toast.LENGTH_SHORT).show();
+                Toast.makeText(HuntTreasureActivity.this, "Sending message to others", Toast.LENGTH_SHORT).show();
             }
         });
     }
-
-    private String getUniquePhoneId() {
-        final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
-        final String tmDevice, tmSerial, androidId;
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.READ_PHONE_STATE}, 2);
-        }
-        tmDevice = "" + tm.getDeviceId();
-        tmSerial = "" + tm.getSimSerialNumber();
-        androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
-        String deviceId = deviceUuid.toString();
-        return deviceId;
-    }
-
 
 
   @Override
@@ -498,10 +495,19 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
       planeRenderer.createOnGlThread(this, "models/trigrid.png");
       pointCloudRenderer.createOnGlThread(this);
 
-      virtualObject.createOnGlThread(this, "models/andy.obj", "models/andy.png");
-      virtualObject.setMaterialProperties(0.0f, 2.0f, 0.5f, 6.0f);
 
-      virtualObjectShadow.createOnGlThread(
+        if (treasureType == CreateTreasureActivity.TreasureType.LETTER) {
+            mLogger.logInfo("Treasuretype was letter");
+            virtualObject.createOnGlThread(this, "models/letter.obj", "models/letter.png");
+
+        } else if (treasureType == CreateTreasureActivity.TreasureType.TREASURE_CHEST) {
+            mLogger.logInfo("Treasuretype was treasure");
+
+            virtualObject.createOnGlThread(this, "models/treasure.obj", "models/t5.png");
+        }
+        virtualObject.setMaterialProperties(0.0f, 2.0f, 0.5f, 6.0f);
+
+        virtualObjectShadow.createOnGlThread(
           this, "models/andy_shadow.obj", "models/andy_shadow.png");
       virtualObjectShadow.setBlendMode(BlendMode.Shadow);
       virtualObjectShadow.setMaterialProperties(1.0f, 0.0f, 0.0f, 1.0f);
@@ -514,6 +520,8 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
   public void onSurfaceChanged(GL10 gl, int width, int height) {
     displayRotationHelper.onSurfaceChanged(width, height);
     GLES20.glViewport(0, 0, width, height);
+      mWidth = width;
+      mHeight = height;
   }
 
   @Override
@@ -530,6 +538,21 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
 
     try {
       session.setCameraTextureName(backgroundRenderer.getTextureId());
+
+      if(isTreasureObjectReplaced){
+          if (treasureType == CreateTreasureActivity.TreasureType.LETTER) {
+              mLogger.logInfo("Treasuretype was letter");
+              virtualObject.createOnGlThread(this, "models/letter.obj", "models/letter.png");
+
+          } else if (treasureType == CreateTreasureActivity.TreasureType.TREASURE_CHEST) {
+              mLogger.logInfo("Treasuretype was treasure");
+
+              virtualObject.createOnGlThread(this, "models/treasure.obj", "models/t5.png");
+          }
+          virtualObject.setMaterialProperties(0.0f, 2.0f, 0.5f, 6.0f);
+          isTreasureObjectReplaced = false;
+      }
+
 
       // Obtain the current frame from ARSession. When the configuration is set to
       // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
@@ -584,11 +607,11 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
       if (shouldDrawAnchor) {
         float[] colorCorrectionRgba = new float[4];
         frame.getLightEstimate().getColorCorrection(colorCorrectionRgba, 0);
-
+        //Log.i(TAG, "Found Anchor, use this to update some status");
         // Update and draw the model and its shadow.
-        float scaleFactor = 1.0f;
-        virtualObject.updateModelMatrix(anchorMatrix, scaleFactor);
-        virtualObjectShadow.updateModelMatrix(anchorMatrix, scaleFactor);
+
+        virtualObject.updateModelMatrix(anchorMatrix, GlobalVariables.OBJECT_SCALE);
+        virtualObjectShadow.updateModelMatrix(anchorMatrix, GlobalVariables.OBJECT_SCALE);
         virtualObject.draw(viewMatrix, projectionMatrix, colorCorrectionRgba);
         virtualObjectShadow.draw(viewMatrix, projectionMatrix, colorCorrectionRgba);
       }
@@ -658,7 +681,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     hostButton.setEnabled(false);
     resolveButton.setText(R.string.cancel);
     roomCodeText.setText(String.valueOf(roomCode));
-    snackbarHelper.showMessageWithDismiss(this, getString(R.string.snackbar_on_resolve));
+    snackbarHelper.showMessageWithDismiss(this, getString(R.string.snackbar_on_resolve ));
 
     // Register a new listener for the given room.
     firebaseManager.registerNewListenerForRoom(
@@ -716,15 +739,27 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         Dialog pictureDialog = new Dialog(HuntTreasureActivity.this);
         pictureDialog.setContentView(R.layout.picture_hint_dialog);
         ImageView hintPicture = pictureDialog.findViewById(R.id.image);
-        //hintPicture.setImageBitmap(bitmap);
+        Treasure t = firebaseManager.getAllTreasures().get(treasureIndex);
+        hintPicture.setImageBitmap(t.getHintPicture());
         //todo setRealImage
         pictureDialog.show();
     }
 
     @Override
     public void onTreasureClicked(int treasureIndex) {
-        mLogger.logInfo("OnTreasureClicked at treasure:"+ Integer.toString(treasureIndex));
+        Treasure t = firebaseManager.getAllTreasures().get(treasureIndex);
+        mLogger.logInfo("OnTreasureClicked at treasure:"+ Integer.toString(treasureIndex)+", Room:" + t.getRoomId());
 
+        if(t.getTreasureType() == CreateTreasureActivity.TreasureType.TREASURE_CHEST ){
+            treasureType =  CreateTreasureActivity.TreasureType.TREASURE_CHEST ;
+            GlobalVariables.OBJECT_ROTATION = 245.88f;
+        }else{
+            treasureType =  CreateTreasureActivity.TreasureType.LETTER;
+            GlobalVariables.OBJECT_SCALE = 0.1f;
+        }
+        isTreasureObjectReplaced = true;
+        onRoomCodeEntered((long)t.getRoomId());
+        Log.i(TAG, "Type of treasure to be shown: "+ treasureType.name());
     }
 
   /**

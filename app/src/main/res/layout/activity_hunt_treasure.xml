@@ -35,12 +35,14 @@
         android:id="@+id/host_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:text="@string/host_button_text"/>
 
     <Button
         android:id="@+id/resolve_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:visibility="gone"
         android:text="@string/resolve_button_text"/>
 
     <Button

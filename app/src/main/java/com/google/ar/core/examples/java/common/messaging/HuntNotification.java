@@ -12,6 +12,7 @@ public class HuntNotification implements Serializable{
     private String displayName;             // "Hunt AR App"
     private String hostedAnchorId;          // "ua-6d0c06b57559a5d39d04de6bbee7f171"
     private String identifyStatus;          // Public:"Created" -> Hidden:"Found"
+    private String identifyHint;
     private double latitude;
     private double longitude;
     private String notificationTitle;
@@ -70,6 +71,14 @@ public class HuntNotification implements Serializable{
     public HuntNotification fromJson(String json){
         HuntNotification tn = new Gson().fromJson(json, HuntNotification.class);
         return tn;
+    }
+
+    public String getIdentifyHint() {
+        return identifyHint;
+    }
+
+    public void setIdentifyHint(String identifyHint) {
+        this.identifyHint = identifyHint;
     }
 
     public double getLatitude() {
@@ -176,6 +185,7 @@ public class HuntNotification implements Serializable{
                 ", displayName='" + displayName + '\'' +
                 ", hostedAnchorId='" + hostedAnchorId + '\'' +
                 ", identifyStatus='" + identifyStatus + '\'' +
+                ", identifyHint='" + identifyHint + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
                 ", notificationTitle='" + notificationTitle + '\'' +

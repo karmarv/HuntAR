@@ -7,24 +7,26 @@ import java.io.Serializable;
 public class Treasure implements Serializable {
 
 
-
+    private Integer roomId;
     private String expiration;
     private String hint;
     private CreateTreasureActivity.TreasureType treasureType;
     private Bitmap hintPicture;
     private String hintPictureUrl;
-    private double longtitude;
+    private double longitude;
     private double latitude;
 
 
     private boolean isTrackingThisTreasure;
 
-    public Treasure(String expiration, String hint, CreateTreasureActivity.TreasureType treasureType, Bitmap hintPicture, double longtitude, double latitude, boolean isTracking) {
+    public Treasure(){}
+    public Treasure(String expiration, String hint, CreateTreasureActivity.TreasureType treasureType, Bitmap hintPicture, String hintPictureUrl, double longitude, double latitude, boolean isTracking) {
         this.expiration = expiration;
         this.hint = hint;
         this.treasureType = treasureType;
         this.hintPicture = hintPicture;
-        this.longtitude = longtitude;
+        this.hintPictureUrl = hintPictureUrl;
+        this.longitude = longitude;
         this.latitude = latitude;
         this.isTrackingThisTreasure = isTracking;
     }
@@ -34,6 +36,14 @@ public class Treasure implements Serializable {
 
     public void setTrackingThisTreasure(boolean trackingThisTreasure) {
         isTrackingThisTreasure = trackingThisTreasure;
+    }
+
+    public Integer getRoomId() {
+        return roomId;
+    }
+
+    public void setRoomId(Integer roomId) {
+        this.roomId = roomId;
     }
 
     public String getHintPictureUrl() {
@@ -73,12 +83,12 @@ public class Treasure implements Serializable {
         this.hintPicture = hintPicture;
     }
 
-    public double getLongtitude() {
-        return longtitude;
+    public double getLongitude() {
+        return longitude;
     }
 
-    public void setLongtitude(double longtitude) {
-        this.longtitude = longtitude;
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
     public double getLatitude() {
@@ -93,5 +103,18 @@ public class Treasure implements Serializable {
         this.expiration = expiration;
     }
 
-
+    @Override
+    public String toString() {
+        return "Treasure{" +
+                "roomId=" + roomId +
+                ", expiration='" + expiration + '\'' +
+                ", hint='" + hint + '\'' +
+                ", treasureType=" + treasureType +
+                ", hintPicture=" + hintPicture +
+                ", hintPictureUrl='" + hintPictureUrl + '\'' +
+                ", longitude=" + longitude +
+                ", latitude=" + latitude +
+                ", isTrackingThisTreasure=" + isTrackingThisTreasure +
+                '}';
+    }
 }
