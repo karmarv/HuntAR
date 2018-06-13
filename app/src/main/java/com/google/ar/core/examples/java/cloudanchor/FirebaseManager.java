@@ -67,17 +67,14 @@ public class FirebaseManager {
 
   /** Listener for a new room code. */
   interface RoomCodeListener {
-
     /** Invoked when a new room code is available from Firebase. */
     void onNewRoomCode(Long newRoomCode);
-
     /** Invoked if a Firebase Database Error happened while fetching the room code. */
     void onError(DatabaseError error);
   }
 
   /** Listener for a new cloud anchor ID. */
   interface CloudAnchorIdListener {
-
     /** Invoked when a new cloud anchor ID is available. */
     void onNewCloudAnchorId(String cloudAnchorId);
   }

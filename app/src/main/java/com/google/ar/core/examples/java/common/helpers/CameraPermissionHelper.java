@@ -30,6 +30,25 @@ public final class CameraPermissionHelper {
   private static final int STORAGE_PERMISSION_CODE = 1;
   private static final String STORAGE_PERMISSION = Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
+  private static final int PERMISSION_ALL = 1;
+  private static final String[] PERMISSIONS = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
+  public static boolean hasPermissions(Activity activity) {
+    if (activity != null && PERMISSIONS != null) {
+      for (String permission : PERMISSIONS) {
+        if (ActivityCompat.checkSelfPermission(activity, permission) != PackageManager.PERMISSION_GRANTED) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  public static void requestPermissions(Activity activity){
+      if (!hasPermissions(activity)) {
+        ActivityCompat.requestPermissions(activity, PERMISSIONS, PERMISSION_ALL);
+      }
+    }
+
   /** Check to see we have the necessary permissions for this app. */
   public static boolean hasCameraPermission(Activity activity) {
     return ContextCompat.checkSelfPermission(activity, CAMERA_PERMISSION)
@@ -55,15 +74,17 @@ public final class CameraPermissionHelper {
     activity.startActivity(intent);
   }
 
-  /** Check to see we have the necessary permissions for this app. */
-  public static boolean hasFilePermission(Activity activity) {
-    return ContextCompat.checkSelfPermission(activity, STORAGE_PERMISSION)
-            == PackageManager.PERMISSION_GRANTED;
-  }
 
-  /** Check to see we have the necessary permissions for this app, and ask for them if we don't. */
-  public static void requestFilePermission(Activity activity) {
-    ActivityCompat.requestPermissions(
-            activity, new String[] {STORAGE_PERMISSION}, STORAGE_PERMISSION_CODE);
-  }
+    /** Check to see we have the necessary permissions for this app. */
+    public static boolean hasLocationPermission(Activity activity) {
+        return ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Check to see we have the necessary permissions for this app, and ask for them if we don't. */
+    public static void requestLocationPermission(Activity activity) {
+        ActivityCompat.requestPermissions(
+                activity, new String[] {Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+    }
 }

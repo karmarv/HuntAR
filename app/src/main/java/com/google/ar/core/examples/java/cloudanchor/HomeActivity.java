@@ -2,10 +2,13 @@ package com.google.ar.core.examples.java.cloudanchor;
 
 import android.app.Dialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.GuardedBy;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -14,6 +17,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.ar.core.Anchor;
@@ -44,6 +48,7 @@ import com.google.ar.core.exceptions.UnavailableApkTooOldException;
 import com.google.ar.core.exceptions.UnavailableArcoreNotInstalledException;
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -187,6 +192,21 @@ public class HomeActivity extends AppCompatActivity implements GLSurfaceView.Ren
         final Dialog dialog = new Dialog(HomeActivity.this);
         //setting custom layout to dialog
         dialog.setContentView(R.layout.hunt_type_picture_dialog);
+
+        // Load image on the hint view
+        ImageView img = (ImageView) dialog.findViewById(R.id.treasureHintImageView);
+        img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) { // set the image
+                Log.i(TAG, "Click on the image view");
+                File imgFile = new File(Environment.getExternalStorageDirectory().getPath()+"/Download/pippo.png");
+                if(imgFile.exists()){
+                    Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                    ImageView myImage = (ImageView) dialog.findViewById(R.id.treasureHintImageView);
+                    myImage.setImageBitmap(myBitmap);
+                }
+            }
+        });
 
         ImageButton huntDialogButton = dialog.findViewById(R.id.startHuntDialogImgButton);
         huntDialogButton.setOnClickListener(new View.OnClickListener() {

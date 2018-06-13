@@ -52,6 +52,7 @@
 	<string name="treasure_planes_found">Treasure surface found! Click to place your treasure</string>
 	<string name="treasure_placed">Treasure placed, click again to relocate. Pinch to manipulate the size</string>
 	<string name="treasure_relocated">Treasure relocated! Pinch to manipulate the size</string>
+    <string name="treasure_location_hint_img">Treasure location image available</string>
 	<string name="treasure_trying_to_locate">Trying to locate the treasure&#8230; Move around where you placed it or place a new one</string>
 
 

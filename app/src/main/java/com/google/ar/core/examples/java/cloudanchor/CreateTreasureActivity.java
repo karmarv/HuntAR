@@ -314,8 +314,8 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
 
         // ARCore requires camera permissions to operate. If we did not yet obtain runtime
         // permission on Android M and above, now is a good time to ask the user for it.
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
-          CameraPermissionHelper.requestCameraPermission(this);
+        if (!CameraPermissionHelper.hasPermissions(this)) {
+          CameraPermissionHelper.requestPermissions(this);
           return;
         }
         session = new Session(this);
@@ -388,7 +388,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
 
   @Override
   public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-    if (!CameraPermissionHelper.hasCameraPermission(this)) {
+    if (!CameraPermissionHelper.hasPermissions(this)) {
       Toast.makeText(this, "Camera permission is needed to run this application", Toast.LENGTH_LONG)
           .show();
       if (!CameraPermissionHelper.shouldShowRequestPermissionRationale(this)) {
@@ -759,11 +759,6 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
 
   private void openTreasureUploadedDialog() {
     final Dialog dialog = new Dialog(CreateTreasureActivity.this);
-
-    if (!CameraPermissionHelper.hasFilePermission(this)) {
-      CameraPermissionHelper.requestFilePermission(this);
-      return;
-    }
 
     //setting custom layout to dialog
     dialog.setContentView(R.layout.treasure_uploaded_dialog);
