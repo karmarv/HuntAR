@@ -15,6 +15,8 @@ public class Treasure implements Serializable {
     private String hintPictureUrl;
     private double longitude;
     private double latitude;
+    private float rotation;
+    private float scale;
 
 
     private boolean isTrackingThisTreasure;
@@ -54,6 +56,21 @@ public class Treasure implements Serializable {
         this.hintPictureUrl = hintPictureUrl;
     }
 
+    public float getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
+    }
+
+    public float getScale() {
+        return scale;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
+    }
 
     public String getExpiration() {
         return expiration;
@@ -114,6 +131,8 @@ public class Treasure implements Serializable {
                 ", hintPictureUrl='" + hintPictureUrl + '\'' +
                 ", longitude=" + longitude +
                 ", latitude=" + latitude +
+                ", rotation=" + rotation +
+                ", scale=" + scale +
                 ", isTrackingThisTreasure=" + isTrackingThisTreasure +
                 '}';
     }

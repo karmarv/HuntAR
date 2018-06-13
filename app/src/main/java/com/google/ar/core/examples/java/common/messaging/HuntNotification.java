@@ -15,6 +15,9 @@ public class HuntNotification implements Serializable{
     private String identifyHint;
     private double latitude;
     private double longitude;
+
+    private float rotation;
+    private float scale;
     private String notificationTitle;
     private String notificationMessage;
     private String notificationImageurl;
@@ -71,6 +74,22 @@ public class HuntNotification implements Serializable{
     public HuntNotification fromJson(String json){
         HuntNotification tn = new Gson().fromJson(json, HuntNotification.class);
         return tn;
+    }
+
+    public float getRotation() {
+        return rotation;
+    }
+
+    public void setRotation(float rotation) {
+        this.rotation = rotation;
+    }
+
+    public float getScale() {
+        return scale;
+    }
+
+    public void setScale(float scale) {
+        this.scale = scale;
     }
 
     public String getIdentifyHint() {
@@ -188,6 +207,8 @@ public class HuntNotification implements Serializable{
                 ", identifyHint='" + identifyHint + '\'' +
                 ", latitude=" + latitude +
                 ", longitude=" + longitude +
+                ", rotation=" + rotation +
+                ", scale=" + scale +
                 ", notificationTitle='" + notificationTitle + '\'' +
                 ", notificationMessage='" + notificationMessage + '\'' +
                 ", notificationImageurl='" + notificationImageurl + '\'' +

@@ -728,6 +728,8 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
           }
           String hint = ((TextInputEditText) dialog.findViewById(R.id.hintEditText)).getText().toString();
           mHuntNotification.setIdentifyHint(hint);
+          mHuntNotification.setRotation(GlobalVariables.OBJECT_ROTATION);
+          mHuntNotification.setScale(GlobalVariables.OBJECT_SCALE);
           BitmapDrawable drawable = (BitmapDrawable)((ImageView)dialog.findViewById(R.id.treasureImageView)).getDrawable();
           mHintImage = drawable.getBitmap();
 

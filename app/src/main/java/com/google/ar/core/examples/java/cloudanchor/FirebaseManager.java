@@ -108,6 +108,8 @@ public class FirebaseManager {
   private static final String KEY_ANCHOR_ID = "hosted_anchor_id";
   private static final String KEY_IDENTIFY_STATUS = "identify_status";
   private static final String KEY_IDENTIFY_HINT="identify_hint";
+  private static final String KEY_ROTATION = "rotation";
+  private static final String KEY_SCALE="scale";
   private static final String KEY_LATITUDE = "latitude";
   private static final String KEY_LONGITUDE = "longitude";
   private static final String KEY_NOTIFICATION_TITLE = "notification_title";
@@ -154,7 +156,7 @@ public class FirebaseManager {
                       }
 
                       Treasure t = new Treasure();
-                      t.setExpiration("Expires in: 8 mins");
+                      t.setExpiration("Expiry: 24 hrs");
                       t.setRoomId(Integer.parseInt(key));
                       if(childDataSnapshot.child(KEY_IDENTIFY_HINT).getValue() != null)
                             t.setHint(childDataSnapshot.child(KEY_IDENTIFY_HINT).getValue().toString());
@@ -171,6 +173,10 @@ public class FirebaseManager {
                             t.setLatitude(Double.parseDouble(childDataSnapshot.child(KEY_LATITUDE).getValue().toString()));
                       if(childDataSnapshot.child(KEY_LONGITUDE).getValue() != null)
                           t.setLongitude(Double.parseDouble(childDataSnapshot.child(KEY_LONGITUDE).getValue().toString()));
+                      if(childDataSnapshot.child(KEY_ROTATION).getValue() != null)
+                          t.setRotation(Float.parseFloat(childDataSnapshot.child(KEY_ROTATION).getValue().toString()));
+                      if(childDataSnapshot.child(KEY_SCALE).getValue() != null)
+                          t.setScale(Float.parseFloat(childDataSnapshot.child(KEY_SCALE).getValue().toString()));
                       notificationStoreMap.put(key, t);
                       downloadCacheImageFromStorage(key, (String) childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue());
                       Log.i(TAG, t.toString());
@@ -205,13 +211,16 @@ public class FirebaseManager {
 
   public List<Treasure> getAllTreasures(){
       List<Treasure> sorted = new ArrayList<>(notificationStoreMap.values());
-      Collections.sort(sorted, new Comparator<Treasure>(){
-          public int compare(Treasure o1, Treasure o2){
-              if(o1.getRoomId() == o2.getRoomId())
-                  return 0;
-              return o1.getRoomId() > o2.getRoomId() ? -1 : 1;
-          }
-      });
+      if(sorted != null && sorted.size()>0) {
+          Collections.sort(sorted, new Comparator<Treasure>() {
+              public int compare(Treasure o1, Treasure o2) {
+                  if (o1.getRoomId() == o2.getRoomId())
+                      return 0;
+                  return o1.getRoomId() > o2.getRoomId() ? -1 : 1;
+              }
+          });
+          sorted.get(0).setTrackingThisTreasure(true);
+      }
       return sorted;
   }
     /**
@@ -485,6 +494,8 @@ essage!"}}' https://fcm.googleapis.com/fcm/send
       roomRef.child(KEY_NOTIFICATION_STATUS).setValue(huntNotification.getNotificationStatus());
       roomRef.child(KEY_LATITUDE).setValue(huntNotification.getLatitude());
       roomRef.child(KEY_LONGITUDE).setValue(huntNotification.getLongitude());
+      roomRef.child(KEY_ROTATION).setValue(huntNotification.getRotation());
+      roomRef.child(KEY_SCALE).setValue(huntNotification.getScale());
       roomRef.child(KEY_TIMESTAMP).setValue(Long.valueOf(System.currentTimeMillis()));
   }
 

@@ -749,13 +749,12 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     public void onTreasureClicked(int treasureIndex) {
         Treasure t = firebaseManager.getAllTreasures().get(treasureIndex);
         mLogger.logInfo("OnTreasureClicked at treasure:"+ Integer.toString(treasureIndex)+", Room:" + t.getRoomId());
-
         if(t.getTreasureType() == CreateTreasureActivity.TreasureType.TREASURE_CHEST ){
             treasureType =  CreateTreasureActivity.TreasureType.TREASURE_CHEST ;
-            GlobalVariables.OBJECT_ROTATION = 245.88f;
+            GlobalVariables.OBJECT_ROTATION = t.getRotation();
         }else{
             treasureType =  CreateTreasureActivity.TreasureType.LETTER;
-            GlobalVariables.OBJECT_SCALE = 0.1f;
+            GlobalVariables.OBJECT_SCALE = t.getScale();
         }
         isTreasureObjectReplaced = true;
         onRoomCodeEntered((long)t.getRoomId());
