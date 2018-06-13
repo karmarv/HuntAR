@@ -53,7 +53,7 @@ public class PointCloudRenderer {
 
   /**
    * Allocates and initializes OpenGL resources needed by the plane renderer. Must be called on the
-   * OpenGL thread, typically in {@link GLSurfaceView.Renderer# onSurfaceCreated(GL10, EGLConfig)}.
+   * OpenGL thread, typically in {@link GLSurfaceView.Renderer#onSurfaceCreated(GL10, EGLConfig)}.
    *
    * @param context Needed to access shader source.
    */

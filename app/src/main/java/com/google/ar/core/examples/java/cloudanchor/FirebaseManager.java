@@ -31,7 +31,6 @@ import android.widget.Toast;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -58,7 +57,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -154,11 +152,11 @@ public class FirebaseManager {
     byte[] data = baos.toByteArray();
 
     String pathFireImg = "images/"+filename;
-      // Create the file metadata
-      // Create file metadata including the content type
-      StorageMetadata metadata = new StorageMetadata.Builder()
-              .setContentType("image/jpg")
-              .build();
+    // Create the file metadata
+    // Create file metadata including the content type
+    StorageMetadata metadata = new StorageMetadata.Builder()
+            .setContentType("image/jpg")
+            .build();
     // Create a child reference imagesRef now points to "images"
     StorageReference imagesRef = storageRef.child(pathFireImg); // Firebase path: images/file.jpg
     // Upload task
@@ -166,7 +164,7 @@ public class FirebaseManager {
     uploadTask.addOnFailureListener(new OnFailureListener() {
       @Override
       public void onFailure(@NonNull Exception exception) {
-       Log.e(TAG, "Error in upload: "+exception.getMessage());
+        Log.e(TAG, "Error in upload: "+exception.getMessage());
       }
     }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
       @Override
@@ -187,43 +185,45 @@ public class FirebaseManager {
   }
 
   public void downloadImageFromStorage(String pathFireImg, StorageListener listener){
-      // Create a reference with an initial file path and name
-      StorageReference pathReference = storageRef.child(pathFireImg);
-      Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
-      // Create a reference to a file from a Google Cloud Storage URI
-      storageRef.child(pathFireImg).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-          @Override
-          public void onSuccess(byte[] bytes) {
-              // Data for "images/island.jpg" is returns, use this as needed
-              Bitmap bitmap = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
-              listener.onDownloadCompleteBitmap(bitmap);
-          }
-      }).addOnFailureListener(new OnFailureListener() {
-          @Override
-          public void onFailure(@NonNull Exception exception) {
-              listener.onError(exception.getMessage());
-          }
-      });
+    // Create a reference with an initial file path and name
+    StorageReference pathReference = storageRef.child(pathFireImg);
+    Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
+    // Create a reference to a file from a Google Cloud Storage URI
+    storageRef.child(pathFireImg).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+      @Override
+      public void onSuccess(byte[] bytes) {
+        // Data for "images/island.jpg" is returns, use this as needed
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes , 0, bytes.length);
+        listener.onDownloadCompleteBitmap(bitmap);
+      }
+    }).addOnFailureListener(new OnFailureListener() {
+      @Override
+      public void onFailure(@NonNull Exception exception) {
+        listener.onError(exception.getMessage());
+      }
+    });
 
   }
 
-    public void downloadImageUrlFromStorage(String pathFireImg, StorageListener listener){
-        // Create a reference with an initial file path and name
-        StorageReference pathReference = storageRef.child(pathFireImg);
-        Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
-        storageRef.child(pathFireImg).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-            @Override
-            public void onSuccess(Uri uri) {
-                // Uri for "images/island.jpg" is returns, use this as needed
-                listener.onDownloadCompleteUrl(uri.toString());
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                listener.onError(exception.getMessage());
-            }
-        });
-    }
+  public void downloadImageUrlFromStorage(String pathFireImg, StorageListener listener){
+    // Create a reference with an initial file path and name
+    StorageReference pathReference = storageRef.child(pathFireImg);
+    Log.i(TAG,"\n\n Downloading " + pathFireImg + " from firebase");
+    storageRef.child(pathFireImg).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+      @Override
+      public void onSuccess(Uri uri) {
+        // Uri for "images/island.jpg" is returns, use this as needed
+        listener.onDownloadCompleteUrl(uri.toString());
+      }
+    }).addOnFailureListener(new OnFailureListener() {
+      @Override
+      public void onFailure(@NonNull Exception exception) {
+        listener.onError(exception.getMessage());
+      }
+    });
+  }
+
+
 
   public void subscribeNotifications(Context context){
     String channelId  =  context.getString(R.string.default_notification_channel_id);
