@@ -736,6 +736,16 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
           dialog.dismiss();
           uploadProgressLayout.setVisibility(View.VISIBLE);
           uploadTreasure();
+          //todo actually upload anchor
+          final Handler timerHandler = new Handler();
+          Runnable timerRunnable = new Runnable() {
+            @Override
+            public void run() {
+              uploadProgressLayout.setVisibility(View.GONE);
+              openTreasureUploadedDialog();
+            }
+          };
+          timerHandler.postDelayed(timerRunnable, 10000);
       }
     });
     dialog.show();
@@ -791,7 +801,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
   /** Callback function invoked when the user presses the OK button in the Resolve Dialog. */
   private void onRoomCodeEntered(Long roomCode) {
     hostResolveMode = HostResolveMode.RESOLVING;
-    snackbarHelper.showMessageWithDismiss(this, getString(R.string.snackbar_on_resolve));
+    //snackbarHelper.showMessageWithDismiss(this, getString(R.string.snackbar_on_resolve));
 
     // Register a new listener for the given room.
     firebaseManager.registerNewListenerForRoom(
@@ -835,7 +845,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
     public void onNewRoomCode(Long newRoomCode) {
       Preconditions.checkState(roomCode == null, "The room code cannot have been set before.");
       roomCode = newRoomCode;
-      //snackbarHelper.showMessageWithDismiss(         CreateTreasureActivity.this, getString(R.string.snackbar_room_code_available));
+      snackbarHelper.showMessageWithDismiss(CreateTreasureActivity.this, getString(R.string.snackbar_room_code_available));
       checkAndMaybeShare();
       synchronized (singleTapLock) {
         // Change hostResolveMode to HOSTING after receiving the room code (not when the 'Host' button
@@ -879,6 +889,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       Log.i(TAG, "Download initiated for this image");
       mHuntNotification.setRoomId(roomCode);
       mHuntNotification.setHostedAnchorId(cloudAnchorId);
+      mLogger.logInfo("onCloudTaskComplete: "+mHuntNotification.toString());
       firebaseManager.sendUpstreamMessage(getApplicationContext(), mHuntNotification);
       Log.i(TAG, "Broadcast Cloud Anchor Notification: "+mHuntNotification);
       checkAndMaybeShare();
@@ -894,7 +905,7 @@ public class CreateTreasureActivity extends AppCompatActivity implements GLSurfa
       mHuntNotification.setHostedAnchorId(cloudAnchorId);
       firebaseManager.storeAnchorIdInRoom(mHuntNotification);
       mLogger.logInfo(">>> Store");
-      //snackbarHelper.showMessageWithDismiss(CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared, new Object[]{roomCode}));
+      snackbarHelper.showMessageWithDismiss(CreateTreasureActivity.this, getString(R.string.snackbar_cloud_id_shared, new Object[]{roomCode}));
       openTreasureUploadedDialog();
       uploadProgressLayout.setVisibility(View.GONE);
        // Toast.makeText(getApplicationContext(),

@@ -681,7 +681,7 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
     hostButton.setEnabled(false);
     resolveButton.setText(R.string.cancel);
     roomCodeText.setText(String.valueOf(roomCode));
-    snackbarHelper.showMessageWithDismiss(this, getString(R.string.snackbar_on_resolve ));
+    //snackbarHelper.showMessageWithDismiss(this, getString(R.string.snackbar_on_resolve ));
 
     // Register a new listener for the given room.
     firebaseManager.registerNewListenerForRoom(
@@ -752,10 +752,15 @@ public class HuntTreasureActivity extends AppCompatActivity implements GLSurface
         if(t.getTreasureType() == CreateTreasureActivity.TreasureType.TREASURE_CHEST ){
             treasureType =  CreateTreasureActivity.TreasureType.TREASURE_CHEST ;
             GlobalVariables.OBJECT_ROTATION = t.getRotation();
+            GlobalVariables.OBJECT_SCALE = t.getScale();
+
         }else{
             treasureType =  CreateTreasureActivity.TreasureType.LETTER;
             GlobalVariables.OBJECT_SCALE = t.getScale();
+            GlobalVariables.OBJECT_ROTATION = t.getRotation();
         }
+        mLogger.logInfo("SCale>" + Float.toString(GlobalVariables.OBJECT_SCALE));
+        mLogger.logInfo("onTreasureClicked: "+t.toString());
         isTreasureObjectReplaced = true;
         onRoomCodeEntered((long)t.getRoomId());
         Log.i(TAG, "Type of treasure to be shown: "+ treasureType.name());

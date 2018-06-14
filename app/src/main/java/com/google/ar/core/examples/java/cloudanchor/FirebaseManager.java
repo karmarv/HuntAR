@@ -158,25 +158,34 @@ public class FirebaseManager {
                       Treasure t = new Treasure();
                       t.setExpiration("Expiry: 24 hrs");
                       t.setRoomId(Integer.parseInt(key));
+                      try {
+                          if(childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue() != null)
+                              t.setHintPictureUrl(childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue().toString());
+                          if(childDataSnapshot.child(KEY_LATITUDE).getValue() != null)
+                              t.setLatitude(Double.parseDouble(childDataSnapshot.child(KEY_LATITUDE).getValue().toString()));
+                          if(childDataSnapshot.child(KEY_LONGITUDE).getValue() != null)
+                              t.setLongitude(Double.parseDouble(childDataSnapshot.child(KEY_LONGITUDE).getValue().toString()));
+                          if (childDataSnapshot.child(KEY_ROTATION).getValue() != null)
+                              t.setRotation(Float.parseFloat(childDataSnapshot.child(KEY_ROTATION).getValue().toString()));
+                          if (childDataSnapshot.child(KEY_SCALE).getValue() != null)
+                              t.setScale(Float.parseFloat(childDataSnapshot.child(KEY_SCALE).getValue().toString()));
+                      }catch(Exception e){
+                          Log.e(TAG, e.getMessage());
+                      }
                       if(childDataSnapshot.child(KEY_IDENTIFY_HINT).getValue() != null)
                             t.setHint(childDataSnapshot.child(KEY_IDENTIFY_HINT).getValue().toString());
                       if( childDataSnapshot.child(KEY_TYPE).getValue() != null) {
                           if(childDataSnapshot.child(KEY_TYPE).getValue().toString().equalsIgnoreCase("treasure")) {
                               t.setTreasureType(CreateTreasureActivity.TreasureType.TREASURE_CHEST);
+                              t.setScale(1.0f);
+                              t.setRotation(0f);
                           }else {
                               t.setTreasureType(CreateTreasureActivity.TreasureType.LETTER);
+                              t.setScale(0.1f);
+                              t.setRotation(0f);
                           }
                       }
-                      if(childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue() != null)
-                          t.setHintPictureUrl(childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue().toString());
-                      if(childDataSnapshot.child(KEY_LATITUDE).getValue() != null)
-                            t.setLatitude(Double.parseDouble(childDataSnapshot.child(KEY_LATITUDE).getValue().toString()));
-                      if(childDataSnapshot.child(KEY_LONGITUDE).getValue() != null)
-                          t.setLongitude(Double.parseDouble(childDataSnapshot.child(KEY_LONGITUDE).getValue().toString()));
-                      if(childDataSnapshot.child(KEY_ROTATION).getValue() != null)
-                          t.setRotation(Float.parseFloat(childDataSnapshot.child(KEY_ROTATION).getValue().toString()));
-                      if(childDataSnapshot.child(KEY_SCALE).getValue() != null)
-                          t.setScale(Float.parseFloat(childDataSnapshot.child(KEY_SCALE).getValue().toString()));
+
                       notificationStoreMap.put(key, t);
                       downloadCacheImageFromStorage(key, (String) childDataSnapshot.child(KEY_NOTIFICATION_IMAGEURL).getValue());
                       Log.i(TAG, t.toString());
@@ -219,7 +228,7 @@ public class FirebaseManager {
                   return o1.getRoomId() > o2.getRoomId() ? -1 : 1;
               }
           });
-          sorted.get(0).setTrackingThisTreasure(true);
+          sorted.get(0).setTrackingThisTreasure(false);
       }
       return sorted;
   }
@@ -370,7 +379,7 @@ public class FirebaseManager {
                   msg = context.getString(R.string.msg_subscribe_failed);
                 }
                 Log.d(TAG, "Topic: "+channelName+", Message:"+msg);
-                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
               }
             });
     // [END subscribe_topics]

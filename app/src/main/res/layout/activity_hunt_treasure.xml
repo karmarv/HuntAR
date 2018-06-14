@@ -48,6 +48,7 @@
     <Button
         android:id="@+id/notifyHuntersButton"
         android:layout_width="wrap_content"
+        android:visibility="gone"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:text="@string/log_token" />
@@ -63,7 +64,7 @@
       android:layout_width="wrap_content"
       android:layout_below="@id/buttonRow"
       android:layout_height="wrap_content"
-
+      android:visibility="gone"
       android:fontFamily="monospace"
       android:text="@string/initial_room_code"
       android:textAlignment="center"

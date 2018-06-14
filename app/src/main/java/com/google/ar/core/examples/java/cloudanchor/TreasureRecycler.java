@@ -35,7 +35,7 @@ public class TreasureRecycler extends RecyclerView.Adapter<RecyclerView.ViewHold
     private Bitmap letterBitmap;
     private int selectedBackground;
     private int notSelectedBackground;
-    private int selectedTreasurePosition = 0;
+    private int selectedTreasurePosition = -1;
     public interface OnTreasureRecyclerRequest{
         void onMapsClicked(int treasureIndex);
 
@@ -76,7 +76,8 @@ public class TreasureRecycler extends RecyclerView.Adapter<RecyclerView.ViewHold
             return;
         }
         mItems.get(newPositionToTrack).setTrackingThisTreasure(true);
-        mItems.get(selectedTreasurePosition).setTrackingThisTreasure(false);
+        if(selectedTreasurePosition != -1)
+            mItems.get(selectedTreasurePosition).setTrackingThisTreasure(false);
         notifyItemChanged(newPositionToTrack);
         notifyItemChanged(selectedTreasurePosition);
         selectedTreasurePosition = newPositionToTrack;

@@ -36,16 +36,16 @@
   <string name="snackbar_arcore_sdk_too_old">Please update the app with a newer version of the ARCore SDK.</string>
   <string name="snackbar_arcore_exception">This device does not support ARCore.</string>
   <string name="snackbar_camera_unavailable">Camera unavailable. Please restart the app.</string>
-  <string name="snackbar_cloud_id_shared">The treasure id %s is shared via Firebase.</string>
+  <string name="snackbar_cloud_id_shared">The treasure id %s is shared</string>
   <string name="snackbar_dismiss">Dismiss</string>
   <string name="snackbar_firebase_error">There was a Firebase Error. Please check Logcat for more details.</string>
   <string name="snackbar_host_error">Hosting Error: %1$s</string>
-  <string name="snackbar_initial_message">Hunt view mode. Roam around slowly observing planes.</string>
+  <string name="snackbar_initial_message">Find available treasures by clicking the map in the top right corner. Then follow the instructions there</string>
   <string name="snackbar_on_host">Now in Hosting Mode. Press Cancel to Exit.</string>
   <string name="snackbar_on_resolve">Resolving objects in the room.</string>
   <string name="snackbar_resolve_error">Resolving Error: %1$s</string>
-  <string name="snackbar_resolve_success">Attempting to load objects around you.</string>
-  <string name="snackbar_room_code_available">Sharing this anchor info to host.</string>
+  <string name="snackbar_resolve_success">Trying to locate treasure</string>
+  <string name="snackbar_room_code_available">Sharing this treasure</string>
 
 
 	<string name="treasure_planes_looking">Move around slowly and possible treasure hiding spots might show up!</string>

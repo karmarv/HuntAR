@@ -131,8 +131,7 @@ public class HomeActivity extends AppCompatActivity implements GLSurfaceView.Ren
             @Override
             public void onClick(View v) {
                 openTreasureHuntDialog();
-                Toast.makeText(getApplicationContext(), "Run start hunting", Toast.LENGTH_LONG)
-                        .show();
+                //Toast.makeText(getApplicationContext(), "Run start hunting", Toast.LENGTH_LONG).show();
             }
         });
         createTreasureButton = findViewById(R.id.createTreasureButton);
